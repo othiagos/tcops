@@ -51,5 +51,17 @@ fn main() {
     println!("--- END OF PROCESSING ---");
     println!("Execution Time: {:.2?}", duration);
     println!("Status: {:?}", solution.status);
-    println!("Objective (Total Score): {}", solution.total_score);
+    println!("Objective (Total Score): {:.2}", solution.total_score); 
+    println!("Total Cost: {:.2}", solution.total_cost);
+
+    println!("Routes:");
+    for route in solution.routes {
+        println!(
+            "Vehicle {:02}: Cost: {:>8.2}, Score: {:>3}, Path: {:?}", 
+            route.vehicle_id, 
+            route.cost, 
+            route.score, 
+            route.path
+        );
+    }
 }

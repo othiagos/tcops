@@ -329,7 +329,7 @@ fn parse_vehicle(parts: Vec<&str>, nodes: &[Node]) -> Result<Vehicle, Error> {
     }
 
     let id = parse_integer(parts[0])?;
-    let tmax = parse_float(parts[1])?;
+    let budget = parse_float(parts[1])?;
     let start_node_id = parse_integer(parts[2])?;
     let end_node_id = parse_integer(parts[3])?;
 
@@ -338,7 +338,7 @@ fn parse_vehicle(parts: Vec<&str>, nodes: &[Node]) -> Result<Vehicle, Error> {
 
     Ok(Vehicle {
         id,
-        tmax,
+        budget,
         start_node_id,
         end_node_id,
     })

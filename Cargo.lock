@@ -300,7 +300,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "team-clustered-orienteering-problem-with-subgroups"
+name = "tcops"
 version = "0.1.0"
 dependencies = [
  "clap",

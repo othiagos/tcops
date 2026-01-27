@@ -1,8 +1,8 @@
+use crate::common::instance::Instance;
+
 #[derive(Debug, Clone, PartialEq, Default)]
 pub enum SolutionStatus {
     Optimal,
-    Feasible,
-    Infeasible,
     #[default]
     Unknown,
 }
@@ -17,6 +17,7 @@ pub struct Route {
 
 #[derive(Debug, Clone, Default)]
 pub struct Solution {
+    pub instance: Instance,
     pub routes: Vec<Route>,
     pub total_cost: f64,
     pub total_score: f64,

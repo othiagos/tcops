@@ -37,7 +37,7 @@ pub struct Cluster {
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Vehicle {
     pub id: usize,
-    pub tmax: f64,
+    pub budget: f64,
     pub start_node_id: usize,
     pub end_node_id: usize,
 }
@@ -57,18 +57,6 @@ impl Instance {
             .point
             .distance_to(&self.nodes[to_id].point)
     }
-
-    pub fn get_node(&self, id: usize) -> &Node {
-        &self.nodes[id]
-    }
-
-    pub fn get_subgroup(&self, id: usize) -> &Subgroup {
-        &self.subgroups[id]
-    }
-
-    pub fn get_cluster(&self, id: usize) -> &Cluster {
-        &self.clusters[id]
-    }
 }
 
 pub trait HasId {
@@ -80,16 +68,19 @@ impl HasId for Node {
         self.id
     }
 }
+
 impl HasId for Subgroup {
     fn id(&self) -> usize {
         self.id
     }
 }
+
 impl HasId for Cluster {
     fn id(&self) -> usize {
         self.id
     }
 }
+
 impl HasId for Vehicle {
     fn id(&self) -> usize {
         self.id
