@@ -1,12 +1,15 @@
 use crate::common::{error::SolverError, instance::Instance, solution::Solution};
 
-pub mod ilp;
+mod constraint;
+mod ilp;
+mod objective;
+mod parser;
+mod variable;
 
 use ilp::Ilp;
 
 pub fn solve(instance: Instance) -> Result<Solution, SolverError> {
     println!("(EXACT) Running solver");
 
-    let solver = Ilp::new(instance);
-    solver.solve()
+    Ilp::new(instance).solve()
 }
