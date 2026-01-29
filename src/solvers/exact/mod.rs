@@ -9,7 +9,5 @@ mod variable;
 use ilp::Ilp;
 
 pub fn solve(instance: Instance) -> Result<Solution, SolverError> {
-    println!("(EXACT) Running solver");
-
     Ilp::new(instance).solve()
 }

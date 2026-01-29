@@ -10,8 +10,11 @@ pub struct Cli {
     #[arg(short, long, value_enum)]
     pub mode: SolverMode,
 
+    #[arg(short, long, default_value_t = false)]
+    pub show: bool,
+
     #[arg(short, long, default_value_t = 60)]
-    pub time_limit: u64,
+    pub limit: u64,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug)]

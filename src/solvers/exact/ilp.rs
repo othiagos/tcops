@@ -77,18 +77,13 @@ impl Ilp {
             instance,
         } = self;
 
-        let objective_for_eval = objective.clone();
-
-        let problem = vars.maximise(objective);
+        let problem = vars.maximise(&objective);
         let solver = LpSolver(GurobiSolver::new());
         let model = problem.using(solver).with_all(constraints);
 
         match model.solve() {
             Ok(solution) => Ok(parser::parse_solution(
-                solution,
-                variables,
-                objective_for_eval,
-                instance,
+                solution, variables, objective, instance,
             )),
             Err(e) => Err(SolverError::new(
                 SolverErrorKind::GurobiSolverError,

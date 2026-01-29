@@ -1,4 +1,4 @@
-use crate::common::instance::{Cluster, HasId, Instance, Node, Point3, Subgroup, Vehicle};
+use crate::common::instance::{Cluster, HasId, Instance, Metric, Node, Point3, Subgroup, Vehicle};
 use std::fs::File;
 use std::io::{BufRead, BufReader, Error, ErrorKind};
 use std::path::Path;
@@ -8,7 +8,7 @@ const SEC_SUBGROUPS: &str = "SUBGROUP_SECTION";
 const SEC_CLUSTERS: &str = "CLUSTER_SECTION";
 const SEC_VEHICLES: &str = "VEHICLES_SECTION";
 
-pub fn load_instance(path: &Path) -> Result<Instance, Error> {
+pub fn load_instance(path: &Path) -> Result<(Instance, String), Error> {
     let file = File::open(path)?;
     let mut reader = BufReader::new(file);
 
@@ -16,7 +16,19 @@ pub fn load_instance(path: &Path) -> Result<Instance, Error> {
     read_header(&mut instance, &mut reader)?;
     read_sections(&mut instance, &mut reader)?;
 
-    Ok(instance)
+    
+    let input_folder_path = Path::new(&path);
+    let input_folder_path = input_folder_path.parent().unwrap_or(Path::new("./"));
+
+    let folder_path = match input_folder_path.to_str() {
+        Some(path) => path,
+        None => {
+            eprintln!("Failed to convert input folder path to string");
+            std::process::exit(1);
+        }
+    };
+
+    Ok((instance, folder_path.to_string()))
 }
 
 fn get_split_line_parts(line: &str) -> Vec<&str> {
@@ -121,8 +133,23 @@ fn read_header(instance: &mut Instance, reader: &mut BufReader<File>) -> Result<
         .vehicles
         .reserve_exact(parse_header_integer(&line)?);
 
-    ignore_line(reader, 1)?;
+    line = read_next_line(reader)?;
+    instance.metric = parser_metric(parse_header_string(&line)?)?;
+    
     Ok(())
+}
+
+fn parser_metric(metric: String) -> Result<Metric, Error> {
+    match metric.as_str() {
+        "EUC_2D" => Ok(Metric::Euc2d),
+        "EUC_3D" => Ok(Metric::Euc3d),
+        "MAN_2D" => Ok(Metric::Man2d),
+        "MAN_3D" => Ok(Metric::Man3d),
+        _ => Err(Error::new(
+            ErrorKind::InvalidData,
+            format!("Unknown metric: {}", metric),
+        )),
+    }
 }
 
 fn read_sections(instance: &mut Instance, reader: &mut BufReader<File>) -> Result<(), Error> {

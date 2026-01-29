@@ -2,10 +2,14 @@ use clap::Parser;
 
 mod cli;
 mod common;
+mod exporter;
+mod plotter;
 mod solvers;
 
 use cli::{Cli, SolverMode};
 use common::parser;
+use exporter::io;
+use plotter::plot;
 use solvers::exact;
 use solvers::heuristic;
 use std::time::Instant;
@@ -15,8 +19,8 @@ fn main() {
 
     println!("Mode: {:?}, Input: {:?}", args.mode, args.input);
 
-    let instance = match parser::load_instance(&args.input) {
-        Ok(inst) => inst,
+    let (instance, folder_path) = match parser::load_instance(&args.input) {
+        Ok((inst, folder)) => (inst, folder),
         Err(e) => {
             eprintln!("Fail to load instance {:?}: {}", args.input, e);
             std::process::exit(1);
@@ -48,20 +52,25 @@ fn main() {
 
     let duration = start_time.elapsed();
 
-    println!("--- END OF PROCESSING ---");
+    println!("Instance: {}", solution.instance.name);
     println!("Execution Time: {:.2?}", duration);
     println!("Status: {:?}", solution.status);
-    println!("Objective (Total Score): {:.2}", solution.total_score); 
+    println!("Objective (Total Score): {:.2}", solution.total_score);
     println!("Total Cost: {:.2}", solution.total_cost);
 
     println!("Routes:");
-    for route in solution.routes {
+    for route in &solution.routes {
         println!(
-            "Vehicle {:02}: Cost: {:>8.2}, Score: {:>3}, Path: {:?}", 
-            route.vehicle_id, 
-            route.cost, 
-            route.score, 
-            route.path
+            "Vehicle {:02}: Cost: {:>8.2}, Score: {:>3}, Path: {:?}",
+            route.vehicle_id, route.cost, route.score, route.path
         );
+    }
+
+    let json_filename = &solution.instance.name;
+
+    io::export_solution_to_json(&folder_path, json_filename, &solution);
+
+    if args.show {
+        plot::show(&format!("{}/{}.json", folder_path, json_filename));
     }
 }
