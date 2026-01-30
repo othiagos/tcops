@@ -6,6 +6,5 @@ pub struct _AlnsConfig {
 }
 
 pub fn solve(_instance: Instance) -> Result<Solution, SolverError> {
-    println!("(ALNS) Running heuristics");
     Ok(Solution::default())
 }

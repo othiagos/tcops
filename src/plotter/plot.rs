@@ -2,12 +2,23 @@ use std::process::Command;
 
 const PYTHON_SCRIPT: &str = include_str!("../../script/visualizer.py");
 
-pub fn show(json_filename: &str, save: bool) {
+pub fn show(path: &str, show: bool, save: bool) {
     let mut cmd = Command::new("python3");
 
-    let status = cmd.arg("-c").arg(PYTHON_SCRIPT).arg(json_filename).arg(save.to_string()).status();
+    cmd
+        .arg("-c")
+        .arg(PYTHON_SCRIPT)
+        .arg(path);
 
-    if let Err(e) = status {
+    if show {
+        cmd.arg("show");
+    }
+    
+    if save {
+        cmd.arg("save");
+    }
+
+    if let Err(e) = cmd.status() {
         eprintln!("Failed to execute script: {}", e);
     }
 }

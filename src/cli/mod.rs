@@ -16,6 +16,9 @@ pub struct Cli {
     #[arg(short, long, default_value_t = false)]
     pub show: bool,
 
+    #[arg(short, long, default_value_t = false)]
+    pub save: bool,
+
     #[arg(short, long, default_value_t = 60)]
     pub limit: u64,
 }

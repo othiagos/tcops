@@ -36,7 +36,7 @@ struct JsonSolution {
     routes: Vec<Vec<usize>>,
 }
 
-pub fn export_solution_to_json(path: &str, json_filename: &str, solution: &Solution) {
+pub fn export_solution_to_json(path: &str, solution: &Solution) {
     let mode = get_mode(solution);
     let nodes = get_node(solution);
     let subgroups = get_subgroup(solution);
@@ -51,8 +51,7 @@ pub fn export_solution_to_json(path: &str, json_filename: &str, solution: &Solut
         routes,
     };
 
-    let json_file_path = format!("{}/{}.json", path, json_filename);
-    let file = match File::create(&json_file_path) {
+    let file = match File::create(path) {
         Ok(f) => f,
         Err(e) => {
             eprintln!("Failed to create JSON file: {}", e);

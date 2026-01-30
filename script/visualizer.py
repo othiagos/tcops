@@ -10,8 +10,12 @@ import numpy as np
 from scipy.spatial import ConvexHull, QhullError
 
 class Visualizer:
-    def __init__(self, data):
+    def __init__(self, data, should_show=False, should_save=False, save_path_base="output"):
         self.data = data
+        self.should_show = should_show
+        self.should_save = should_save
+        self.save_path_base = save_path_base
+        
         self.nodes = {n['id']: np.array([n['x'], n['y'], n['z']]) for n in data['nodes']}
         self.subgroups = {s['id']: s for s in data['subgroups']}
         
@@ -46,7 +50,6 @@ class Visualizer:
         try:
             hull = ConvexHull(pts[:, :2])
             ax.fill(pts[hull.vertices, 0], pts[hull.vertices, 1], color=color, alpha=0.6, zorder=2)
-            # Borda leve
             loop = np.append(hull.vertices, hull.vertices[0])
             ax.plot(pts[loop, 0], pts[loop, 1], '-', color=color, linewidth=1)
         except QhullError:
@@ -77,6 +80,17 @@ class Visualizer:
             ax.add_collection3d(mesh)
         except QhullError:
             ax.plot(pts[:, 0], pts[:, 1], pts[:, 2], 'o--', color=color, alpha=0.5)
+
+    def _finalize_plot(self, plt):
+        if self.should_save:
+            filename = f"{self.save_path_base}.png"
+            plt.savefig(filename, dpi=300, bbox_inches='tight')
+            print(f"Saved plot to: {filename}")
+        
+        if self.should_show:
+            plt.show()
+        else:
+            plt.close() 
 
     def plot_2d(self):
         fig, ax = plt.subplots(figsize=(12, 10))
@@ -118,13 +132,14 @@ class Visualizer:
         cbar = plt.colorbar(sm, ax=ax, fraction=0.03, pad=0.04)
         cbar.set_label('Reward', fontsize=10)
 
-        ax.set_title(f"{len(self.data['routes'])} Vehicles", fontsize=14)
+        ax.set_title(f"{len(self.data['routes'])} Vehicles (2D)", fontsize=14)
         ax.set_xlabel("X"); ax.set_ylabel("Y")
         if len(self.data['routes']) <= 20:
             ax.legend(loc='upper right', framealpha=1.0, fontsize=9, ncol=2)
         ax.grid(True, linestyle=':', alpha=0.4)
         plt.tight_layout()
-        plt.show()
+
+        self._finalize_plot(plt)
 
     def plot_3d(self):
         fig = plt.figure(figsize=(12, 10))
@@ -149,7 +164,6 @@ class Visualizer:
             self._draw_subgroup_3d(ax, pts, color)
             count_sub += 1
 
-
         for nid, n in self.nodes.items():
             ax.scatter(n[0], n[1], n[2], c='black', marker='o', s=20, depthshade=False)
 
@@ -165,12 +179,13 @@ class Visualizer:
         cbar = plt.colorbar(sm, ax=ax, fraction=0.03, pad=0.1)
         cbar.set_label('Reward', fontsize=10)
 
-        ax.set_title(f"{len(self.data['routes'])} Vehicles", fontsize=14)
+        ax.set_title(f"{len(self.data['routes'])} Vehicles (3D)", fontsize=14)
         ax.set_xlabel("X"); ax.set_ylabel("Y"); ax.set_zlabel("Z")
         if len(self.data['routes']) <= 20:
             ax.legend(loc='upper right', framealpha=0.9, fontsize=8)
         plt.tight_layout()
-        plt.show()
+
+        self._finalize_plot(plt)
 
     def _get_cluster_points(self, cluster):
         pts = []
@@ -182,17 +197,21 @@ class Visualizer:
         return np.array(pts)
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        file_path = sys.argv[1]
-    else:
-        print("Error: Please provide the path to the JSON file as a command-line argument")
+    if len(sys.argv) < 2:
+        print("Usage: python visualizer.py <json_file_path> [show] [save]")
         sys.exit(1)
+
+    file_path = sys.argv[1]
+    args = sys.argv[2:]
+
+    should_show = any(arg.lower() in ["show", "--show"] for arg in args)
+    should_save = any(arg.lower() in ["save", "--save"] for arg in args)
 
     if not os.path.exists(file_path):
         print(f"Error: File '{file_path}' not found")
         sys.exit(1)
 
-    print(f"Read data from: {file_path}")
+    print(f"Reading data from: {file_path}")
 
     try:
         with open(file_path, 'r') as f:
@@ -200,12 +219,16 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Error reading JSON: {e}")
         sys.exit(1)
-        
-    plot = Visualizer(data)
     
-    if data["mode"] == "2d":
+    save_path_base = os.path.splitext(file_path)[0]
+
+    plot = Visualizer(data, should_show, should_save, save_path_base)
+    
+    mode = data.get("mode", "2d")
+    
+    if mode == "2d":
         plot.plot_2d()
-    elif data["mode"] == "3d":
+    elif mode == "3d":
         plot.plot_3d()
     else:
-        print(f"Error: Unknown mode '{data['mode']}'. Use '2d' or '3d'")
+        print(f"Error: Unknown mode '{mode}'. Use '2d' or '3d'")

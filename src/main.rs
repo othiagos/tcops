@@ -66,11 +66,9 @@ fn main() {
         );
     }
 
-    let json_filename = &solution.instance.name;
+    let filename = &solution.instance.name;
+    let path = &format!("{}/{}.json", folder_path, filename);
 
-    io::export_solution_to_json(&folder_path, json_filename, &solution);
-
-    if args.show {
-        plot::show(&format!("{}/{}.json", folder_path, json_filename));
-    }
+    io::export_solution_to_json(path, &solution);
+    plot::show(path, args.show, args.save);
 }
