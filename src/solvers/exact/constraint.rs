@@ -4,9 +4,9 @@ use good_lp::{Constraint, Expression};
 
 use crate::common::instance::Instance;
 
-use crate::solvers::exact::ilp::UsedVariables;
+use crate::solvers::exact::ilp::DecisionVariables;
 
-pub fn flow_conservation(variable: &UsedVariables, instance: &Instance) -> Vec<Constraint> {
+pub fn flow_conservation(variable: &DecisionVariables, instance: &Instance) -> Vec<Constraint> {
     let mut constraints = Vec::new();
     let num_nodes = instance.nodes.len();
 
@@ -52,7 +52,7 @@ pub fn flow_conservation(variable: &UsedVariables, instance: &Instance) -> Vec<C
     constraints
 }
 
-pub fn unique_visit(variable: &UsedVariables, instance: &Instance) -> Vec<Constraint> {
+pub fn unique_visit(variable: &DecisionVariables, instance: &Instance) -> Vec<Constraint> {
     let mut constraints = Vec::new();
     let num_nodes = instance.nodes.len();
 
@@ -79,7 +79,7 @@ pub fn unique_visit(variable: &UsedVariables, instance: &Instance) -> Vec<Constr
     constraints
 }
 
-pub fn logical_physical(variable: &UsedVariables, instance: &Instance) -> Vec<Constraint> {
+pub fn logical_physical(variable: &DecisionVariables, instance: &Instance) -> Vec<Constraint> {
     let mut constraints = Vec::new();
     let num_nodes = instance.nodes.len();
 
@@ -107,7 +107,7 @@ pub fn logical_physical(variable: &UsedVariables, instance: &Instance) -> Vec<Co
     constraints
 }
 
-pub fn cluster(variable: &UsedVariables, instance: &Instance) -> Vec<Constraint> {
+pub fn cluster(variable: &DecisionVariables, instance: &Instance) -> Vec<Constraint> {
     let mut constraints = Vec::new();
 
     for (c_id, cluster) in instance.clusters.iter().enumerate() {
@@ -123,7 +123,7 @@ pub fn cluster(variable: &UsedVariables, instance: &Instance) -> Vec<Constraint>
     constraints
 }
 
-pub fn budget(variable: &UsedVariables, instance: &Instance) -> Vec<Constraint> {
+pub fn budget(variable: &DecisionVariables, instance: &Instance) -> Vec<Constraint> {
     let mut constraints = Vec::new();
     let num_nodes = instance.nodes.len();
 
@@ -146,7 +146,10 @@ pub fn budget(variable: &UsedVariables, instance: &Instance) -> Vec<Constraint> 
     constraints
 }
 
-pub fn subtour_elimination_mtz(variable: &UsedVariables, instance: &Instance) -> Vec<Constraint> {
+pub fn subtour_elimination_mtz(
+    variable: &DecisionVariables,
+    instance: &Instance,
+) -> Vec<Constraint> {
     let mut constraints = Vec::new();
     let n = instance.nodes.len() as f64;
 

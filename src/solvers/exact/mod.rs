@@ -3,6 +3,11 @@ use crate::{
     common::{error::SolverError, instance::Instance, solution::Solution},
 };
 
+use good_lp::{
+    LpSolver,
+    solvers::{highs::highs, lp_solvers::GurobiSolver},
+};
+
 mod constraint;
 mod ilp;
 mod objective;
@@ -11,11 +16,11 @@ mod variable;
 
 use ilp::Ilp;
 
-pub fn solve(instance: Instance, solver: ExactSolverType) -> Result<Solution, SolverError> {
+pub fn solve(instance: Instance, solver_type: ExactSolverType) -> Result<Solution, SolverError> {
     let ilp = Ilp::new(instance);
 
-    match solver {
-        ExactSolverType::Gurobi => ilp.solve_gurobi(),
-        ExactSolverType::Highs => ilp.solve_highs(),
+    match solver_type {
+        ExactSolverType::Gurobi => ilp.solve(LpSolver(GurobiSolver::new())),
+        ExactSolverType::Highs => ilp.solve(highs),
     }
 }

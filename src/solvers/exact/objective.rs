@@ -1,9 +1,9 @@
 use crate::common::instance::Instance;
-use crate::solvers::exact::ilp::UsedVariables;
+use crate::solvers::exact::ilp::DecisionVariables;
 
 use good_lp::Expression;
 
-pub fn function(variables: &UsedVariables, instance: &Instance) -> Expression {
+pub fn function(variables: &DecisionVariables, instance: &Instance) -> Expression {
     let num_vehicles = instance.vehicles.len();
     let num_nodes = instance.nodes.len();
     let num_subgroups = instance.subgroups.len();

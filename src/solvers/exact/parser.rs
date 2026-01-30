@@ -5,11 +5,11 @@ use crate::common::{
     solution::{Route, Solution, SolutionStatus},
 };
 
-use crate::solvers::exact::ilp::UsedVariables;
+use crate::solvers::exact::ilp::DecisionVariables;
 
 pub fn parse_solution<S: SolutionTrait>(
     solution: S,
-    variables: UsedVariables,
+    variables: DecisionVariables,
     objective: Expression,
     instance: Instance,
 ) -> Solution {
@@ -37,7 +37,7 @@ pub fn parse_solution<S: SolutionTrait>(
 fn get_route<S: SolutionTrait>(
     instance: &Instance,
     solution: &S,
-    variables: &UsedVariables,
+    variables: &DecisionVariables,
     k: usize,
 ) -> Option<Route> {
     let current_route_nodes = get_route_node(instance, solution, variables, k);
@@ -71,7 +71,7 @@ fn get_route<S: SolutionTrait>(
 fn get_route_node<S: SolutionTrait>(
     instance: &Instance,
     solution: &S,
-    variables: &UsedVariables,
+    variables: &DecisionVariables,
     k: usize,
 ) -> Vec<usize> {
     let mut current_route_nodes: Vec<usize> = Vec::new();
