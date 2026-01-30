@@ -10,6 +10,9 @@ pub struct Cli {
     #[arg(short, long, value_enum)]
     pub mode: SolverMode,
 
+    #[arg(long, value_enum, required_if_eq("mode", "exact"))]
+    pub solver: Option<ExactSolverType>,
+
     #[arg(short, long, default_value_t = false)]
     pub show: bool,
 
@@ -20,5 +23,11 @@ pub struct Cli {
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug)]
 pub enum SolverMode {
     Exact,
-    Alns,
+    Heuristic,
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug)]
+pub enum ExactSolverType {
+    Gurobi,
+    Highs,
 }

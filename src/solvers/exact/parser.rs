@@ -1,7 +1,4 @@
-use good_lp::{
-    Expression, Solution as LpSolverTrait,
-    solvers::lp_solvers::LpSolution,  
-};
+use good_lp::{Expression, Solution as SolutionTrait};
 
 use crate::common::{
     instance::Instance,
@@ -10,13 +7,13 @@ use crate::common::{
 
 use crate::solvers::exact::ilp::UsedVariables;
 
-pub fn parse_solution(
-    solution: LpSolution,
+pub fn parse_solution<S: SolutionTrait>(
+    solution: S,
     variables: UsedVariables,
     objective: Expression,
     instance: Instance,
 ) -> Solution {
-    let total_score = LpSolverTrait::eval(&solution, objective);
+    let total_score = solution.eval(objective);
 
     let mut routes: Vec<Route> = Vec::new();
     for k in 0..instance.vehicles.len() {
@@ -27,6 +24,7 @@ pub fn parse_solution(
     }
 
     let total_cost = routes.iter().map(|r| r.cost).sum();
+
     Solution {
         instance,
         total_score,
@@ -36,9 +34,9 @@ pub fn parse_solution(
     }
 }
 
-fn get_route(
+fn get_route<S: SolutionTrait>(
     instance: &Instance,
-    solution: &LpSolution,
+    solution: &S,
     variables: &UsedVariables,
     k: usize,
 ) -> Option<Route> {
@@ -70,9 +68,9 @@ fn get_route(
     Some(route)
 }
 
-fn get_route_node(
+fn get_route_node<S: SolutionTrait>(
     instance: &Instance,
-    solution: &LpSolution,
+    solution: &S,
     variables: &UsedVariables,
     k: usize,
 ) -> Vec<usize> {
@@ -85,7 +83,7 @@ fn get_route_node(
     let mut found_next;
     let num_nodes = instance.nodes.len();
 
-    for _ in 0..num_nodes {
+    for _ in 0..num_nodes + 2 {
         found_next = false;
 
         for next_node in 0..num_nodes {
@@ -93,7 +91,7 @@ fn get_route_node(
                 continue;
             }
 
-            let val = LpSolverTrait::value(solution, variables.x[k][current_node][next_node]);
+            let val = solution.value(variables.x[k][current_node][next_node]);
 
             if val >= 0.5 {
                 current_route_nodes.push(next_node);

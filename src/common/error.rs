@@ -3,8 +3,9 @@ use std::fmt;
 #[allow(dead_code)]
 #[derive(Debug, PartialEq)]
 pub enum SolverErrorKind {
-    GurobiSolverError,
-    UnknownError,
+    GurobiSolver,
+    HighsSolver,
+    Unknown,
 }
 
 impl fmt::Display for SolverErrorKind {

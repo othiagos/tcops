@@ -3,6 +3,8 @@ use good_lp::{
     solvers::lp_solvers::GurobiSolver, variables,
 };
 
+use good_lp::solvers::highs::highs;
+
 use crate::common::{
     error::{SolverError, SolverErrorKind},
     instance::Instance,
@@ -68,7 +70,7 @@ impl Ilp {
         constraints
     }
 
-    pub fn solve(self) -> Result<Solution, SolverError> {
+    pub fn solve_gurobi(self) -> Result<Solution, SolverError> {
         let Ilp {
             vars,
             constraints,
@@ -86,8 +88,31 @@ impl Ilp {
                 solution, variables, objective, instance,
             )),
             Err(e) => Err(SolverError::new(
-                SolverErrorKind::GurobiSolverError,
+                SolverErrorKind::GurobiSolver,
                 &format!("Error in Solver Gurubi: {}", e),
+            )),
+        }
+    }
+
+    pub fn solve_highs(self) -> Result<Solution, SolverError> {
+        let Ilp {
+            vars,
+            constraints,
+            objective,
+            variables,
+            instance,
+        } = self;
+
+        let problem = vars.maximise(&objective);
+        let model = problem.using(highs).with_all(constraints);
+
+        match model.solve() {
+            Ok(solution) => Ok(parser::parse_solution(
+                solution, variables, objective, instance,
+            )),
+            Err(e) => Err(SolverError::new(
+                SolverErrorKind::HighsSolver,
+                &format!("Error in Solver Highs: {}", e),
             )),
         }
     }
