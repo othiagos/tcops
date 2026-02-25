@@ -57,7 +57,7 @@ impl Ilp {
         constraints.extend(constraint::cluster(variable, instance));
         constraints.extend(constraint::budget(variable, instance));
         constraints.extend(constraint::subtour_elimination_mtz(variable, instance));
-        
+
         constraints
     }
 
@@ -70,8 +70,10 @@ impl Ilp {
             instance,
         } = self;
 
-        let problem = vars.maximise(&objective);
-        let model = problem.using(solver).with_all(constraints);
+        let model = vars
+            .maximise(&objective)
+            .using(solver)
+            .with_all(constraints);
 
         match model.solve() {
             Ok(solution) => Ok(parser::parse_solution(

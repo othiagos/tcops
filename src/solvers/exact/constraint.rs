@@ -81,18 +81,10 @@ pub fn unique_visit(variable: &DecisionVariables, instance: &Instance) -> Vec<Co
 
 pub fn logical_physical(variable: &DecisionVariables, instance: &Instance) -> Vec<Constraint> {
     let mut constraints = Vec::new();
-    let num_nodes = instance.nodes.len();
 
-    let mut node_to_subgroups: Vec<Vec<usize>> = vec![Vec::new(); num_nodes];
-    for (s_id, subgroup) in instance.subgroups.iter().enumerate() {
-        for &node_id in &subgroup.node_ids {
-            node_to_subgroups[node_id].push(s_id);
-        }
-    }
-
-    for (i, subgroups_in_node) in node_to_subgroups.iter().enumerate() {
+    for (i, node) in instance.nodes.iter().enumerate() {
         let mut sum_z_logic = Expression::from(0.0);
-        for &s_id in subgroups_in_node {
+        for &s_id in node.parent_subgroup_ids.iter() {
             sum_z_logic += variable.z[s_id];
         }
 

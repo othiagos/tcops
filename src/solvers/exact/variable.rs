@@ -2,10 +2,7 @@ use crate::common::instance::Instance;
 
 use good_lp::{ProblemVariables, Variable, VariableDefinition, variable};
 
-pub fn initialize_x(
-    instance: &Instance,
-    vars: &mut ProblemVariables,
-) -> Vec<Vec<Vec<Variable>>> {
+pub fn initialize_x(instance: &Instance, vars: &mut ProblemVariables) -> Vec<Vec<Vec<Variable>>> {
     let mut x = vec![
         vec![
             vec![vars.add(VariableDefinition::default()); instance.nodes.len()];
