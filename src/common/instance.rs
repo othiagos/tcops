@@ -25,25 +25,27 @@ pub struct Point3 {
 impl Point3 {
     pub fn distance_to(&self, other: &Point3, metric: &Metric) -> f64 {
         match metric {
-            Metric::Euc2d => (
-                (self.x - other.x).powi(2) +
-                (self.y - other.y).powi(2))
-            .sqrt(),
-            Metric::Euc3d => (
-                (self.x - other.x).powi(2) +
-                (self.y - other.y).powi(2) +
-                (self.z - other.z).powi(2))
-            .sqrt(),
-            Metric::Man2d => {
-                (self.x - other.x).abs() +
-                (self.y - other.y).abs()
-            },
-            Metric::Man3d => {
-                (self.x - other.x).abs() +
-                (self.y - other.y).abs() +
-                (self.z - other.z).abs()
-            }
+            Metric::Euc2d => self.distance_euc_2d(other),
+            Metric::Euc3d => self.distance_euc_3d(other),
+            Metric::Man2d => self.distance_man_2d(other),
+            Metric::Man3d => self.distance_man_3d(other),
         }
+    }
+
+    fn distance_euc_2d(&self, other: &Point3) -> f64 {
+        ((self.x - other.x).powi(2) + (self.y - other.y).powi(2)).sqrt()
+    }
+
+    fn distance_euc_3d(&self, other: &Point3) -> f64 {
+        ((self.x - other.x).powi(2) + (self.y - other.y).powi(2) + (self.z - other.z).powi(2)).sqrt()
+    }
+
+    fn distance_man_2d(&self, other: &Point3) -> f64 {
+        (self.x - other.x).abs() + (self.y - other.y).abs()
+    }
+
+    fn distance_man_3d(&self, other: &Point3) -> f64 {
+        (self.x - other.x).abs() + (self.y - other.y).abs() + (self.z - other.z).abs()
     }
 }
 
