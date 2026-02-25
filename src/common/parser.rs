@@ -1,4 +1,5 @@
 use crate::common::instance::{Cluster, HasId, Instance, Metric, Node, Point3, Subgroup, Vehicle};
+use std::collections::HashSet;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Error, ErrorKind};
 use std::path::Path;
@@ -16,7 +17,6 @@ pub fn load_instance(path: &Path) -> Result<(Instance, String), Error> {
     read_header(&mut instance, &mut reader)?;
     read_sections(&mut instance, &mut reader)?;
 
-    
     let input_folder_path = Path::new(&path);
     let input_folder_path = input_folder_path.parent().unwrap_or(Path::new("./"));
 
@@ -135,7 +135,7 @@ fn read_header(instance: &mut Instance, reader: &mut BufReader<File>) -> Result<
 
     line = read_next_line(reader)?;
     instance.metric = parser_metric(parse_header_string(&line)?)?;
-    
+
     Ok(())
 }
 
@@ -160,11 +160,7 @@ fn read_sections(instance: &mut Instance, reader: &mut BufReader<File>) -> Resul
             break;
         }
 
-        let parts = get_split_line_parts(&line);
-        let section = parts
-            .first()
-            .ok_or_else(|| Error::new(ErrorKind::InvalidData, "Invalid section"))?
-            .trim();
+        let section = get_section_name(&line)?;
 
         if is_empty_or_comment(section) {
             continue;
@@ -177,9 +173,20 @@ fn read_sections(instance: &mut Instance, reader: &mut BufReader<File>) -> Resul
             SEC_VEHICLES => process_vehicles(reader, &mut instance.vehicles, &instance.nodes)?,
             _ => process_default_section(section)?,
         }
+
+        link_parent_references(instance);
     }
 
     Ok(())
+}
+
+fn get_section_name(line: &str) -> Result<&str, Error> {
+    let parts = get_split_line_parts(line);
+
+    Ok(parts
+        .first()
+        .ok_or_else(|| Error::new(ErrorKind::InvalidData, "Invalid section"))?
+        .trim())
 }
 
 fn process_default_section(section: &str) -> Result<(), Error> {
@@ -301,6 +308,7 @@ fn parse_node(parts: Vec<&str>) -> Result<Node, Error> {
         id,
         profit,
         point: Point3 { x, y, z },
+        parent_subgroup_ids: HashSet::new(),
     })
 }
 
@@ -327,6 +335,7 @@ fn parse_subgroup(parts: Vec<&str>, nodes: &[Node]) -> Result<Subgroup, Error> {
         id,
         profit,
         node_ids,
+        parent_cluster_id: 0,
     })
 }
 
@@ -369,4 +378,27 @@ fn parse_vehicle(parts: Vec<&str>, nodes: &[Node]) -> Result<Vehicle, Error> {
         start_node_id,
         end_node_id,
     })
+}
+
+fn link_parent_references(instance: &mut Instance) {
+    link_nodes_references(instance);
+    link_clusters_references(instance);
+}
+
+fn link_nodes_references(instance: &mut Instance) {
+    for subgroup in &mut instance.subgroups {
+        for node_id in &subgroup.node_ids {
+            instance.nodes[*node_id]
+                .parent_subgroup_ids
+                .insert(subgroup.id);
+        }
+    }
+}
+
+fn link_clusters_references(instance: &mut Instance) {
+    for cluster in &instance.clusters {
+        for subgroup_id in &cluster.subgroup_ids {
+            instance.subgroups[*subgroup_id].parent_cluster_id = cluster.id;
+        }
+    }
 }

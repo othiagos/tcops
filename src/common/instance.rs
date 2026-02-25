@@ -1,4 +1,4 @@
-use std::fmt;
+use std::{collections::HashSet, fmt};
 
 #[derive(Debug, Clone, Default)]
 pub enum Metric {
@@ -52,6 +52,7 @@ pub struct Node {
     pub id: usize,
     pub profit: f64,
     pub point: Point3,
+    pub parent_subgroup_ids: HashSet<usize>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -59,6 +60,7 @@ pub struct Subgroup {
     pub id: usize,
     pub profit: f64,
     pub node_ids: Vec<usize>,
+    pub parent_cluster_id: usize,
 }
 
 #[derive(Debug, Clone, Default)]
