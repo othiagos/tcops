@@ -1,7 +1,12 @@
 use crate::common::{error::SolverError, instance::Instance, solution::Solution};
 
-mod vns;
+mod greedy;
+mod local_search;
+mod neighborhoods;
+mod shaking;
+mod solver;
+mod state;
 
 pub fn solve(instance: Instance, max_iterations: usize) -> Result<Solution, SolverError> {
-    vns::solve(instance, max_iterations)
+    solver::solve(instance, max_iterations)
 }

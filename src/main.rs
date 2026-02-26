@@ -28,7 +28,7 @@ fn main() {
     };
 
     println!(
-        "Instance loaded with success (nodes {}, subgroups {}, clusters, {} vehicles {})",
+        "Instance loaded with success (nodes {}, subgroups {}, clusters {}, vehicles {})",
         instance.nodes.len(),
         instance.subgroups.len(),
         instance.clusters.len(),
@@ -39,7 +39,7 @@ fn main() {
 
     let solution = match args.mode {
         SolverMode::Exact => exact::solve(instance, args.solver.unwrap()),
-        SolverMode::Heuristic => heuristic::solve(instance),
+        SolverMode::Heuristic => heuristic::solve(instance, args.max_iterations),
     };
 
     let solution = match solution {
@@ -55,13 +55,14 @@ fn main() {
     println!("Instance: {}", solution.instance.name);
     println!("Execution Time: {:.2?}", duration);
     println!("Status: {:?}", solution.status);
-    println!("Objective (Total Score): {:.2}", solution.total_score);
+    println!("Objective Value: {:.2}", solution.get_objective_value());
+    println!("Total Score: {:.2}", solution.total_score);
     println!("Total Cost: {:.2}", solution.total_cost);
 
     println!("Routes:");
     for route in &solution.routes {
         println!(
-            "Vehicle {:02}: Cost: {:>8.2}, Score: {:>3}, Path: {:?}",
+            "Vehicle {:02}: Cost: {:>8.2}, Score: {:>4.2}, Path: {:?}",
             route.vehicle_id, route.cost, route.score, route.path
         );
     }

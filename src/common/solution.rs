@@ -3,6 +3,7 @@ use crate::common::instance::Instance;
 #[derive(Debug, Clone, PartialEq, Default)]
 pub enum SolutionStatus {
     Optimal,
+    Feasible,
     #[default]
     Unknown,
 }
@@ -22,4 +23,10 @@ pub struct Solution {
     pub total_cost: f64,
     pub total_score: f64,
     pub status: SolutionStatus,
+}
+
+impl Solution {
+    pub fn get_objective_value(&self) -> f64 {
+        self.total_score - (self.total_cost * 0.001)
+    }
 }
