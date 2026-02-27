@@ -16,7 +16,7 @@ mod variable;
 
 use ilp::Ilp;
 
-pub fn solve(instance: Instance, args: &Cli) -> Result<Solution, SolverError> {
+pub fn solve<'a>(instance: &'a Instance, args: &Cli) -> Result<Solution<'a>, SolverError> {
     let ilp = Ilp::new(instance);
 
     match args.solver.unwrap() {

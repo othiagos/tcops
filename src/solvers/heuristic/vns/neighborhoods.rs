@@ -11,12 +11,12 @@ struct InsertionSpot {
     cost_delta: f64,
 }
 
-pub fn evaluate_subgroup_insertion(
+pub fn evaluate_subgroup_insertion<'a>(
     instance: &Instance,
-    solution: &Solution,
+    solution: &Solution<'a>,
     state: &SearchState,
     subgroup_id: usize,
-) -> Option<(Solution, SearchState)> {
+) -> Option<(Solution<'a>, SearchState)> {
     let cluster_id = instance.subgroups[subgroup_id].parent_cluster_id;
 
     if let Some(&locked_sg) = state.cluster_locks.get(&cluster_id)

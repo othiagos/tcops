@@ -17,27 +17,27 @@ pub struct DecisionVariables {
     pub u: Vec<Vec<Variable>>,
 }
 
-pub struct Ilp {
+pub struct Ilp<'a> {
     vars: ProblemVariables,
     constraints: Vec<Constraint>,
     objective: Expression,
     variables: DecisionVariables,
-    instance: Instance,
+    instance: &'a Instance,
 }
 
-impl Ilp {
-    pub fn new(instance: Instance) -> Self {
+impl<'a> Ilp<'a> {
+    pub fn new(instance: &'a Instance) -> Self {
         let mut vars = variables!();
 
-        let x = variable::initialize_x(&instance, &mut vars);
-        let y = variable::initialize_y(&instance, &mut vars);
-        let z = variable::initialize_z(&instance, &mut vars);
-        let w = variable::initialize_w(&instance, &mut vars);
-        let u = variable::initialize_u(&instance, &mut vars);
+        let x = variable::initialize_x(instance, &mut vars);
+        let y = variable::initialize_y(instance, &mut vars);
+        let z = variable::initialize_z(instance, &mut vars);
+        let w = variable::initialize_w(instance, &mut vars);
+        let u = variable::initialize_u(instance, &mut vars);
 
         let variables = DecisionVariables { x, y, z, w, u };
-        let objective = objective::function(&variables, &instance);
-        let constraints = Self::set_constraints(&variables, &instance);
+        let objective = objective::function(&variables, instance);
+        let constraints = Self::set_constraints(&variables, instance);
 
         Self {
             vars,
@@ -61,7 +61,7 @@ impl Ilp {
         constraints
     }
 
-    pub fn solve<S: Solver>(self, solver: S) -> Result<Solution, SolverError> {
+    pub fn solve<S: Solver>(self, solver: S) -> Result<Solution<'a>, SolverError> {
         let Ilp {
             vars,
             constraints,

@@ -7,14 +7,14 @@ use crate::common::{
 
 use crate::solvers::exact::ilp::DecisionVariables;
 
-pub fn parse_solution<S: SolutionTrait>(
+pub fn parse_solution<'a, S: SolutionTrait>(
     solution: S,
     variables: DecisionVariables,
-    instance: Instance,
-) -> Solution {
+    instance: &'a Instance,
+) -> Solution<'a> {
     let mut routes: Vec<Route> = Vec::new();
     for k in 0..instance.vehicles.len() {
-        match get_route(&instance, &solution, &variables, k) {
+        match get_route(instance, &solution, &variables, k) {
             Some(route) => routes.push(route),
             None => continue,
         }

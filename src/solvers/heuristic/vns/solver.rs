@@ -8,13 +8,13 @@ use crate::{
     },
 };
 
-pub fn solve(
-    instance: Instance,
+pub fn solve<'a>(
+    instance: &'a Instance,
     max_iterations_without_improvement: usize,
     max_shaking_intensity: usize,
-) -> Result<Solution, SolverError> {
-    let (mut best_solution, mut best_state) = build_greedy_solution(&instance)?;
-    local_search_insertions(&instance, &mut best_solution, &mut best_state);
+) -> Result<Solution<'a>, SolverError> {
+    let (mut best_solution, mut best_state) = build_greedy_solution(instance)?;
+    local_search_insertions(instance, &mut best_solution, &mut best_state);
 
     println!(
         "Starting solution found! Objective: {:.2} | Score: {:.2} | Cost: {:.2}",
@@ -35,13 +35,13 @@ pub fn solve(
             let mut trial_state = best_state.clone();
 
             apply_shaking(
-                &instance,
+                instance,
                 &mut trial_solution,
                 &mut trial_state,
                 &mut rng,
                 shaking_intensity,
             );
-            local_search_insertions(&instance, &mut trial_solution, &mut trial_state);
+            local_search_insertions(instance, &mut trial_solution, &mut trial_state);
 
             if trial_solution.get_objective_value() > best_solution.get_objective_value() + EPSILON
             {

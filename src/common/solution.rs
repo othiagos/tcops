@@ -16,16 +16,16 @@ pub struct Route {
     pub score: f64,
 }
 
-#[derive(Debug, Clone, Default)]
-pub struct Solution {
-    pub instance: Instance,
+#[derive(Debug, Clone)]
+pub struct Solution<'a> {
+    pub instance: &'a Instance,
     pub routes: Vec<Route>,
     pub total_cost: f64,
     pub total_score: f64,
     pub status: SolutionStatus,
 }
 
-impl Solution {
+impl<'a> Solution<'a> {
     pub fn get_objective_value(&self) -> f64 {
         self.total_score - (self.total_cost * DISTANCE_PENALTY)
     }

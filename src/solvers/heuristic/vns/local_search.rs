@@ -15,11 +15,11 @@ pub fn local_search_insertions(
     }
 }
 
-fn find_best_improving_insertion(
+fn find_best_improving_insertion<'a>(
     instance: &Instance,
-    solution: &Solution,
+    solution: &Solution<'a>,
     state: &SearchState,
-) -> Option<(Solution, SearchState)> {
+) -> Option<(Solution<'a>, SearchState)> {
     let mut best_trial = None;
     let mut best_obj_value = solution.get_objective_value();
 

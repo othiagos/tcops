@@ -8,7 +8,7 @@ use crate::solvers::heuristic::vns::{
     neighborhoods::evaluate_subgroup_insertion, state::SearchState,
 };
 
-pub fn build_greedy_solution(instance: &Instance) -> Result<(Solution, SearchState), SolverError> {
+pub fn build_greedy_solution(instance: &'_ Instance) -> Result<(Solution<'_>, SearchState), SolverError> {
     let (mut solution, mut state) = initialize_empty_solution(instance);
 
     greedily_insert_subgroups(instance, &mut solution, &mut state);
@@ -16,7 +16,7 @@ pub fn build_greedy_solution(instance: &Instance) -> Result<(Solution, SearchSta
     Ok((solution, state))
 }
 
-fn initialize_empty_solution(instance: &Instance) -> (Solution, SearchState) {
+fn initialize_empty_solution(instance: &'_ Instance) -> (Solution<'_>, SearchState) {
     let mut state = SearchState::default();
     let mut routes = Vec::with_capacity(instance.vehicles.len());
     let mut initial_total_cost = 0.0;
@@ -46,7 +46,7 @@ fn initialize_empty_solution(instance: &Instance) -> (Solution, SearchState) {
     }
 
     let solution = Solution {
-        instance: instance.clone(),
+        instance,
         total_score: 0.0,
         total_cost: initial_total_cost,
         routes,
@@ -67,11 +67,11 @@ fn greedily_insert_subgroups(
     }
 }
 
-fn find_best_subgroup_insertion(
+fn find_best_subgroup_insertion<'a>(
     instance: &Instance,
-    solution: &Solution,
+    solution: &Solution<'a>,
     state: &SearchState,
-) -> Option<(Solution, SearchState)> {
+) -> Option<(Solution<'a>, SearchState)> {
     let mut best_trial = None;
     let mut best_ratio = -1.0;
 
