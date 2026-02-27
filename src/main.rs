@@ -38,8 +38,8 @@ fn main() {
     let start_time = Instant::now();
 
     let solution = match args.mode {
-        SolverMode::Exact => exact::solve(instance, args.solver.unwrap()),
-        SolverMode::Heuristic => heuristic::solve(instance, args.max_iterations),
+        SolverMode::Exact => exact::solve(instance, &args),
+        SolverMode::Heuristic => heuristic::solve(instance, &args)
     };
 
     let solution = match solution {

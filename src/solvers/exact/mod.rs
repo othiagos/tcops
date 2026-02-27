@@ -1,5 +1,5 @@
 use crate::{
-    cli::ExactSolverType,
+    cli::{Cli, ExactSolverType},
     common::{error::SolverError, instance::Instance, solution::Solution},
 };
 
@@ -16,10 +16,10 @@ mod variable;
 
 use ilp::Ilp;
 
-pub fn solve(instance: Instance, solver_type: ExactSolverType) -> Result<Solution, SolverError> {
+pub fn solve(instance: Instance, args: &Cli) -> Result<Solution, SolverError> {
     let ilp = Ilp::new(instance);
 
-    match solver_type {
+    match args.solver.unwrap() {
         ExactSolverType::Gurobi => ilp.solve(LpSolver(GurobiSolver::new())),
         ExactSolverType::Highs => ilp.solve(highs),
     }

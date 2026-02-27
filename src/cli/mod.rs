@@ -20,6 +20,10 @@ pub struct Cli {
     #[arg(long, default_value_t = 100)]
     pub max_iterations: usize,
 
+    /// Maximum number of subgroups to remove during the shaking phase
+    #[arg(long, default_value_t = 20)]
+    pub max_shaking_intensity: usize,
+
     /// Displays the detailed solution in the terminal at the end of the execution
     #[arg(long, default_value_t = false)]
     pub show: bool,

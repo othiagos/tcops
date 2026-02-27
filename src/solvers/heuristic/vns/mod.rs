@@ -7,6 +7,10 @@ mod shaking;
 mod solver;
 mod state;
 
-pub fn solve(instance: Instance, max_iterations: usize) -> Result<Solution, SolverError> {
-    solver::solve(instance, max_iterations)
+pub fn solve(
+    instance: Instance,
+    max_iterations: usize,
+    max_shaking_intensity: usize,
+) -> Result<Solution, SolverError> {
+    solver::solve(instance, max_iterations, max_shaking_intensity)
 }
