@@ -1,3 +1,4 @@
+use crate::common::constants::DISTANCE_PENALTY;
 use crate::common::instance::Instance;
 use crate::solvers::exact::ilp::DecisionVariables;
 
@@ -26,8 +27,7 @@ pub fn function(variables: &DecisionVariables, instance: &Instance) -> Expressio
         }
     }
 
-    let epsilon = 0.001;
-    objective -= total_dist_expr * epsilon;
+    objective -= total_dist_expr * DISTANCE_PENALTY;
 
     objective
 }
