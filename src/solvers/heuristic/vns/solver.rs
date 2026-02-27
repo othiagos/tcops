@@ -1,7 +1,7 @@
 use rand::thread_rng;
 
 use crate::{
-    common::{error::SolverError, instance::Instance, solution::Solution},
+    common::{constants::EPSILON, error::SolverError, instance::Instance, solution::Solution},
     solvers::heuristic::vns::{
         greedy::build_greedy_solution, local_search::local_search_insertions,
         shaking::apply_shaking,
@@ -11,74 +11,73 @@ use crate::{
 pub fn solve(
     instance: Instance,
     max_iterations_without_improvement: usize,
+    max_shaking_intensity: usize,
 ) -> Result<Solution, SolverError> {
     let (mut best_solution, mut best_state) = build_greedy_solution(&instance)?;
+    local_search_insertions(&instance, &mut best_solution, &mut best_state);
+
     println!(
-        "Initial solution found!  Objective: {:.2} | Score: {} | Cost: {:.2}",
+        "Starting solution found! Objective: {:.2} | Score: {:.2} | Cost: {:.2}",
         best_solution.get_objective_value(),
         best_solution.total_score,
         best_solution.total_cost
     );
 
-    local_search_insertions(&instance, &mut best_solution, &mut best_state);
-
-    let mut current_solution = best_solution.clone();
-    let mut current_state = best_state.clone();
-
     let mut iter_without_improvement = 0;
     let mut rng = thread_rng();
 
     while iter_without_improvement < max_iterations_without_improvement {
-        let mut k = 1;
-        let k_max = 5;
+        let mut shaking_intensity = 1;
+        let mut improved_in_this_iteration = false;
 
-        while k <= k_max {
-            let mut trial_solution = current_solution.clone();
-            let mut trial_state = current_state.clone();
+        while shaking_intensity <= max_shaking_intensity {
+            let mut trial_solution = best_solution.clone();
+            let mut trial_state = best_state.clone();
 
             apply_shaking(
                 &instance,
                 &mut trial_solution,
                 &mut trial_state,
-                k,
                 &mut rng,
+                shaking_intensity,
             );
-
             local_search_insertions(&instance, &mut trial_solution, &mut trial_state);
 
-            let trial_obj = trial_solution.get_objective_value();
-            let current_obj = current_solution.get_objective_value();
+            if trial_solution.get_objective_value() > best_solution.get_objective_value() + EPSILON
+            {
+                best_solution = trial_solution;
+                best_state = trial_state;
+                shaking_intensity = 1;
+                improved_in_this_iteration = true;
 
-            if trial_obj > current_obj {
-                current_solution = trial_solution;
-                current_state = trial_state;
-                k = 1;
+                println!(
+                    "New best solution found! Objective: {:.2} | Score: {:.2} | Cost: {:.2}",
+                    best_solution.get_objective_value(),
+                    best_solution.total_score,
+                    best_solution.total_cost
+                );
             } else {
-                k += 1;
+                shaking_intensity += 1;
             }
         }
 
-        let current_obj = current_solution.get_objective_value();
-        let best_obj = best_solution.get_objective_value();
-
-        if current_obj > best_obj {
-            best_solution = current_solution.clone();
+        if improved_in_this_iteration {
             iter_without_improvement = 0;
-            println!(
-                "New best solution found! Objective: {:.2} | Score: {} | Cost: {:.2}",
-                current_obj, best_solution.total_score, best_solution.total_cost
-            );
         } else {
             iter_without_improvement += 1;
         }
     }
 
+    best_solution.total_cost = 0.0;
+
     for route in &mut best_solution.routes {
-        if route.path.len() == 2 && route.path[0] == route.path[1] {
-            route.path.pop();
+        if route.path.len() == 2 {
+            route.path.truncate(1);
             route.cost = 0.0;
             route.score = 0.0;
         }
+
+        best_solution.total_cost += route.cost;
     }
 
     Ok(best_solution)

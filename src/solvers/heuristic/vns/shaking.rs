@@ -4,7 +4,7 @@ use rand::seq::SliceRandom;
 use crate::{
     common::{instance::Instance, solution::Solution},
     solvers::heuristic::vns::{
-        neighborhoods::{apply_drop, apply_insertion, evaluate_drop, evaluate_insertion},
+        neighborhoods::{drop_subgroup, evaluate_subgroup_insertion},
         state::SearchState,
     },
 };
@@ -13,44 +13,33 @@ pub fn apply_shaking<R: Rng>(
     instance: &Instance,
     solution: &mut Solution,
     state: &mut SearchState,
-    k: usize,
     rng: &mut R,
+    shaking_intensity: usize,
 ) {
-    apply_destruction_phase(instance, solution, state, k, rng);
-    apply_kick_phase(instance, solution, state, k, rng);
+    apply_destruction_phase(instance, solution, state, rng, shaking_intensity);
+    apply_kick_phase(instance, solution, state, rng, shaking_intensity);
 }
 
 fn apply_destruction_phase<R: Rng>(
     instance: &Instance,
     solution: &mut Solution,
     state: &mut SearchState,
-    k: usize,
     rng: &mut R,
+    shaking_intensity: usize,
 ) {
-    let mut drops_performed = 0;
-    let max_attempts = k * 10;
-    let mut attempts = 0;
+    let active_subgroups: Vec<usize> = state.subgroup_nodes_count.keys().copied().collect();
 
-    while drops_performed < k && attempts < max_attempts {
-        attempts += 1;
+    if active_subgroups.is_empty() {
+        return;
+    }
 
-        if solution.routes.is_empty() {
-            break;
-        }
+    let amount_to_drop = shaking_intensity.min(active_subgroups.len());
+    let to_remove: Vec<&usize> = active_subgroups
+        .choose_multiple(rng, amount_to_drop)
+        .collect();
 
-        let v_idx = rng.gen_range(0..solution.routes.len());
-        let route = &solution.routes[v_idx];
-
-        if route.path.len() <= 2 {
-            continue;
-        }
-
-        let drop_index = rng.gen_range(1..(route.path.len() - 1));
-
-        if let Some(drop_move) = evaluate_drop(instance, solution, state, v_idx, drop_index) {
-            apply_drop(solution, state, &drop_move);
-            drops_performed += 1;
-        }
+    for &sg_id in to_remove {
+        drop_subgroup(instance, solution, state, sg_id);
     }
 }
 
@@ -58,39 +47,23 @@ fn apply_kick_phase<R: Rng>(
     instance: &Instance,
     solution: &mut Solution,
     state: &mut SearchState,
-    k: usize,
     rng: &mut R,
+    shaking_intensity: usize,
 ) {
-    if k < 2 {
+    const MIN_SHAKING_INTENSITY: usize = 2;
+    if shaking_intensity < MIN_SHAKING_INTENSITY {
         return;
     }
 
-    let empty_vehicles: Vec<usize> = solution
-        .routes
-        .iter()
-        .enumerate()
-        .filter(|(_, r)| r.path.len() <= 2)
-        .map(|(i, _)| i)
+    let unvisited_subgroups: Vec<usize> = (0..instance.subgroups.len())
+        .filter(|subgroup_id| !state.subgroup_nodes_count.contains_key(subgroup_id))
         .collect();
 
-    if empty_vehicles.is_empty() {
-        return;
-    }
-   
-    let target_vehicle = empty_vehicles[rng.gen_range(0..empty_vehicles.len())];
-
-    let mut unvisited_nodes: Vec<usize> = (1..instance.nodes.len())
-        .filter(|n| !state.visited_nodes.contains(n))
-        .collect();
-
-    unvisited_nodes.shuffle(rng);
-
-    for &node_id in &unvisited_nodes {
-        if let Some(insert_move) =
-            evaluate_insertion(instance, solution, state, target_vehicle, node_id)
-        {
-            apply_insertion(solution, state, &insert_move);
-            break;
-        }
+    if let Some(&random_subgroup) = unvisited_subgroups.choose(rng)
+        && let Some((new_sol, new_state)) =
+            evaluate_subgroup_insertion(instance, solution, state, random_subgroup)
+    {
+        *solution = new_sol;
+        *state = new_state;
     }
 }

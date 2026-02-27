@@ -1,56 +1,44 @@
-use crate::common::instance::Instance;
-use crate::common::solution::Solution;
-
+use crate::common::{instance::Instance, solution::Solution};
 use crate::solvers::heuristic::vns::{
-    neighborhoods::{InsertMove, apply_insertion, evaluate_insertion},
-    state::SearchState,
+    neighborhoods::evaluate_subgroup_insertion, state::SearchState,
 };
-
-const EPSILON: f64 = 1e-4;
 
 pub fn local_search_insertions(
     instance: &Instance,
     solution: &mut Solution,
     state: &mut SearchState,
 ) {
-    let mut improvement = true;
+    while let Some((new_sol, new_state)) = find_best_improving_insertion(instance, solution, state)
+    {
+        *solution = new_sol;
+        *state = new_state;
+    }
+}
 
-    while improvement {
-        improvement = false;
-        let mut best_global_move: Option<InsertMove> = None;
+fn find_best_improving_insertion(
+    instance: &Instance,
+    solution: &Solution,
+    state: &SearchState,
+) -> Option<(Solution, SearchState)> {
+    let mut best_trial = None;
+    let mut best_obj_value = solution.get_objective_value();
 
-        for next_node in 1..instance.nodes.len() {
-            if state.visited_nodes.contains(&next_node) {
-                continue;
-            }
-
-            for v_idx in 0..solution.routes.len() {
-                if let Some(insert_move) =
-                    evaluate_insertion(instance, solution, state, v_idx, next_node)
-                {
-                    let is_better = match &best_global_move {
-                        None => true,
-                        Some(best) => {
-                            if insert_move.delta_score > best.delta_score + EPSILON {
-                                true
-                            } else if (insert_move.delta_score - best.delta_score).abs() < EPSILON {
-                                insert_move.delta_cost < best.delta_cost - EPSILON
-                            } else {
-                                false
-                            }
-                        }
-                    };
-
-                    if is_better {
-                        best_global_move = Some(insert_move);
-                    }
-                }
-            }
+    for subgroup_id in 0..instance.subgroups.len() {
+        if state.subgroup_nodes_count.contains_key(&subgroup_id) {
+            continue;
         }
 
-        if let Some(best_move) = best_global_move {
-            apply_insertion(solution, state, &best_move);
-            improvement = true;
+        if let Some((trial_sol, trial_state)) =
+            evaluate_subgroup_insertion(instance, solution, state, subgroup_id)
+        {
+            let trial_obj_value = trial_sol.get_objective_value();
+
+            if trial_obj_value > best_obj_value {
+                best_obj_value = trial_obj_value;
+                best_trial = Some((trial_sol, trial_state));
+            }
         }
     }
+
+    best_trial
 }
