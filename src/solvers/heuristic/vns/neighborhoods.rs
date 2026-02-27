@@ -66,8 +66,8 @@ fn find_best_spot_for_node(
     let mut best_spot = None;
     let mut best_cost = f64::MAX;
 
-    for (v_idx, route) in solution.routes.iter().enumerate() {
-        let vehicle = &instance.vehicles[v_idx];
+    for (vehicle_id, route) in solution.routes.iter().enumerate() {
+        let vehicle = &instance.vehicles[vehicle_id];
 
         for i in 0..(route.path.len() - 1) {
             let prev = route.path[i];
@@ -80,7 +80,7 @@ fn find_best_spot_for_node(
             if route.cost + delta <= vehicle.budget && delta < best_cost - EPSILON {
                 best_cost = delta;
                 best_spot = Some(InsertionSpot {
-                    vehicle_id: v_idx,
+                    vehicle_id,
                     path_id: i + 1,
                     cost_delta: delta,
                 });
@@ -123,9 +123,9 @@ fn remove_node_from_routes(
     }
 
     for route in &mut solution.routes {
-        let miolo = &route.path[1..route.path.len() - 1];
+        let intermediate_nodes = &route.path[1..route.path.len() - 1];
 
-        if let Some(internal_pos) = miolo.iter().position(|&n| n == node_id) {
+        if let Some(internal_pos) = intermediate_nodes.iter().position(|&n| n == node_id) {
             let pos = internal_pos + 1;
 
             let prev = route.path[pos - 1];
