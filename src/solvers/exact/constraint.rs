@@ -29,23 +29,25 @@ pub fn flow_conservation(variable: &DecisionVariables, instance: &Instance) -> V
                 }
             }
 
+            let y_var = variable.y[k][i];
             if start_node == end_node {
                 if i == start_node {
-                    constraints.push(sum_out.eq(1.0));
-                    constraints.push(sum_in.eq(1.0));
+                    let out_clone = sum_out.clone();
+                    constraints.push(out_clone.leq(1.0));
+                    constraints.push(sum_in.eq(sum_out));
                 } else {
-                    constraints.push(sum_in.eq(variable.y[k][i]));
-                    constraints.push(sum_out.eq(variable.y[k][i]));
+                    constraints.push(sum_in.eq(y_var));
+                    constraints.push(sum_out.eq(y_var));
                 }
             } else if i == start_node {
-                constraints.push(sum_out.eq(1.0));
+                constraints.push(sum_out.leq(1.0));
                 constraints.push(sum_in.eq(0.0));
             } else if i == end_node {
-                constraints.push(sum_in.eq(1.0));
+                constraints.push(sum_in.leq(1.0));
                 constraints.push(sum_out.eq(0.0));
             } else {
-                constraints.push(sum_in.eq(variable.y[k][i]));
-                constraints.push(sum_out.eq(variable.y[k][i]));
+                constraints.push(sum_in.eq(y_var));
+                constraints.push(sum_out.eq(y_var));
             }
         }
     }

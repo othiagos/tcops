@@ -76,9 +76,7 @@ impl Ilp {
             .with_all(constraints);
 
         match model.solve() {
-            Ok(solution) => Ok(parser::parse_solution(
-                solution, variables, objective, instance,
-            )),
+            Ok(solution) => Ok(parser::parse_solution(solution, variables, instance)),
             Err(e) => Err(SolverError::new(
                 SolverErrorKind::Solver,
                 &format!("Error in Solver: {}", e),

@@ -1,4 +1,4 @@
-use good_lp::{Expression, Solution as SolutionTrait};
+use good_lp::Solution as SolutionTrait;
 
 use crate::common::{
     instance::Instance,
@@ -10,11 +10,8 @@ use crate::solvers::exact::ilp::DecisionVariables;
 pub fn parse_solution<S: SolutionTrait>(
     solution: S,
     variables: DecisionVariables,
-    objective: Expression,
     instance: Instance,
 ) -> Solution {
-    let total_score = solution.eval(objective);
-
     let mut routes: Vec<Route> = Vec::new();
     for k in 0..instance.vehicles.len() {
         match get_route(&instance, &solution, &variables, k) {
@@ -23,6 +20,7 @@ pub fn parse_solution<S: SolutionTrait>(
         }
     }
 
+    let total_score = routes.iter().map(|r| r.score).sum();
     let total_cost = routes.iter().map(|r| r.cost).sum();
 
     Solution {
