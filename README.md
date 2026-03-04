@@ -29,7 +29,7 @@ For Ubuntu/Debian systems:
 
 ``` bash
 sudo apt update
-sudo apt install build-essential cmake libgfortran5 libomp-dev
+sudo apt install build-essential libgfortran5 libclang-dev
 ```
 
 ## Rust Installation
