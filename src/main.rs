@@ -39,7 +39,7 @@ fn main() {
 
     let solution = match args.mode {
         SolverMode::Exact => exact::solve(&instance, &args),
-        SolverMode::Heuristic => heuristic::solve(&instance, &args)
+        SolverMode::Heuristic => heuristic::solve(&instance, &args),
     };
 
     let solution = match solution {
@@ -53,7 +53,7 @@ fn main() {
     let duration = start_time.elapsed();
 
     println!("Instance: {}", solution.instance.name);
-    println!("Execution Time: {:.2?}", duration);
+    println!("Solving Time: {:.2?}", duration);
     println!("Status: {:?}", solution.status);
     println!("Objective Value: {:.2}", solution.get_objective_value());
     println!("Total Score: {:.2}", solution.total_score);

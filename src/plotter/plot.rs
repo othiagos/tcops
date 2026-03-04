@@ -10,12 +10,14 @@ pub fn show(path: &str, show: bool, save: bool) {
     if show {
         cmd.arg("show");
     }
- 
+
     if save {
         cmd.arg("save");
     }
 
-    if (show || save) && let Err(e) = cmd.status() {
+    if (show || save)
+        && let Err(e) = cmd.status()
+    {
         eprintln!("Failed to execute script: {}", e);
     }
 }

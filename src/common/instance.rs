@@ -37,7 +37,8 @@ impl Point3 {
     }
 
     fn distance_euc_3d(&self, other: &Point3) -> f64 {
-        ((self.x - other.x).powi(2) + (self.y - other.y).powi(2) + (self.z - other.z).powi(2)).sqrt()
+        ((self.x - other.x).powi(2) + (self.y - other.y).powi(2) + (self.z - other.z).powi(2))
+            .sqrt()
     }
 
     fn distance_man_2d(&self, other: &Point3) -> f64 {

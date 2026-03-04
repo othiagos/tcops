@@ -8,7 +8,9 @@ use crate::solvers::heuristic::vns::{
     neighborhoods::evaluate_subgroup_insertion, state::SearchState,
 };
 
-pub fn build_greedy_solution(instance: &'_ Instance) -> Result<(Solution<'_>, SearchState), SolverError> {
+pub fn build_greedy_solution(
+    instance: &'_ Instance,
+) -> Result<(Solution<'_>, SearchState), SolverError> {
     let (mut solution, mut state) = initialize_empty_solution(instance);
 
     greedily_insert_subgroups(instance, &mut solution, &mut state);

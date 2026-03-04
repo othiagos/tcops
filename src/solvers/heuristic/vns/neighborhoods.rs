@@ -58,8 +58,11 @@ fn find_best_spot_for_node(
     solution: &Solution,
     node_id: usize,
 ) -> Option<InsertionSpot> {
-    
-    if instance.vehicles.iter().any(|v| v.start_node_id == node_id || v.end_node_id == node_id) {
+    if instance
+        .vehicles
+        .iter()
+        .any(|v| v.start_node_id == node_id || v.end_node_id == node_id)
+    {
         return None;
     }
 
@@ -72,7 +75,7 @@ fn find_best_spot_for_node(
         for i in 0..(route.path.len() - 1) {
             let prev = route.path[i];
             let next = route.path[i + 1];
-            
+
             let added = instance.get_distance(prev, node_id) + instance.get_distance(node_id, next);
             let removed = instance.get_distance(prev, next);
             let delta = added - removed;
