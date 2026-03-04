@@ -61,7 +61,13 @@ impl<'a> Ilp<'a> {
         constraints
     }
 
-    pub fn solve<S: Solver>(self, solver: S) -> Result<Solution<'a>, SolverError> {
+    pub fn solve<S, M, F>(self, solver: S, configure: F) -> Result<Solution<'a>, SolverError>
+    where
+        S: Solver,
+        S::Model: SolverModel,
+        M: SolverModel,
+        F: FnOnce(S::Model) -> M,
+    {
         let Ilp {
             vars,
             constraints,
@@ -70,12 +76,14 @@ impl<'a> Ilp<'a> {
             instance,
         } = self;
 
-        let model = vars
+        let base_model = vars
             .maximise(&objective)
             .using(solver)
             .with_all(constraints);
 
-        match model.solve() {
+        let configured_model = configure(base_model);
+
+        match configured_model.solve() {
             Ok(solution) => Ok(parser::parse_solution(solution, variables, instance)),
             Err(e) => Err(SolverError::new(
                 SolverErrorKind::Solver,

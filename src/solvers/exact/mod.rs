@@ -5,7 +5,10 @@ use crate::{
 
 use good_lp::{
     LpSolver,
-    solvers::{highs::highs, lp_solvers::GurobiSolver},
+    solvers::{
+        lp_solvers::{GurobiSolver, Model},
+        scip::{SCIPProblem, scip},
+    },
 };
 
 mod constraint;
@@ -16,11 +19,19 @@ mod variable;
 
 use ilp::Ilp;
 
+fn gurobi_configure(config: Model<GurobiSolver>) -> Model<GurobiSolver> {
+    config
+}
+
+fn scip_configure(config: SCIPProblem) -> SCIPProblem {
+    config
+}
+
 pub fn solve<'a>(instance: &'a Instance, args: &Cli) -> Result<Solution<'a>, SolverError> {
     let ilp = Ilp::new(instance);
 
     match args.solver.unwrap() {
-        ExactSolverType::Gurobi => ilp.solve(LpSolver(GurobiSolver::new())),
-        ExactSolverType::Highs => ilp.solve(highs),
+        ExactSolverType::Gurobi => ilp.solve(LpSolver(GurobiSolver::new()), gurobi_configure),
+        ExactSolverType::Scip => ilp.solve(scip, scip_configure),
     }
 }

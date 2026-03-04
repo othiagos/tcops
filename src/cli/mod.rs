@@ -2,7 +2,12 @@ use clap::{Parser, ValueEnum, ValueHint};
 use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
-#[command(author, version, about = "TCOPS Solver Engine", long_about = "Resolution engine for the Team Clustered Orienteering Problem with Subgroups.")]
+#[command(
+    author,
+    version,
+    about = "TCOPS Solver Engine",
+    long_about = "Resolution engine for the Team Clustered Orienteering Problem with Subgroups."
+)]
 pub struct Cli {
     /// Path to the instance file (.tcops)
     #[arg(long, value_name = "FILE", value_hint = ValueHint::FilePath)]
@@ -31,7 +36,6 @@ pub struct Cli {
     /// Saves the solution result to an output file
     #[arg(long, default_value_t = false)]
     pub save: bool,
-
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug)]
@@ -43,5 +47,5 @@ pub enum SolverMode {
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug)]
 pub enum ExactSolverType {
     Gurobi,
-    Highs,
+    Scip,
 }
