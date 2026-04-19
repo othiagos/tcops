@@ -27,28 +27,20 @@ pub fn solve<'a>(
     let mut rng = thread_rng();
 
     while iter_without_improvement < max_iterations_without_improvement {
-        let mut shaking_intensity = 1;
-        let mut improved_in_this_iteration = false;
+        iter_without_improvement += 1;
 
-        while shaking_intensity <= max_shaking_intensity {
+        let max_shaking_limit = max_shaking_intensity.min(instance.subgroups.len());
+        for shaking_intensity in 0..=max_shaking_limit {
             let mut trial_solution = best_solution.clone();
             let mut trial_state = best_state.clone();
 
-            apply_shaking(
-                instance,
-                &mut trial_solution,
-                &mut trial_state,
-                &mut rng,
-                shaking_intensity,
-            );
+            apply_shaking(instance, &mut trial_solution, &mut trial_state, &mut rng, shaking_intensity);
             local_search_insertions(instance, &mut trial_solution, &mut trial_state);
 
-            if trial_solution.get_objective_value() > best_solution.get_objective_value() + EPSILON
-            {
+            if trial_solution.get_objective_value() > best_solution.get_objective_value() + EPSILON {
                 best_solution = trial_solution;
                 best_state = trial_state;
-                shaking_intensity = 1;
-                improved_in_this_iteration = true;
+                iter_without_improvement = 0;
 
                 println!(
                     "New best solution found! Objective: {:.2} | Score: {:.2} | Cost: {:.2}",
@@ -56,15 +48,7 @@ pub fn solve<'a>(
                     best_solution.total_score,
                     best_solution.total_cost
                 );
-            } else {
-                shaking_intensity += 1;
             }
-        }
-
-        if improved_in_this_iteration {
-            iter_without_improvement = 0;
-        } else {
-            iter_without_improvement += 1;
         }
     }
 

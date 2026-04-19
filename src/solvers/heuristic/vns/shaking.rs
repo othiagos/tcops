@@ -17,7 +17,7 @@ pub fn apply_shaking<R: Rng>(
     shaking_intensity: usize,
 ) {
     apply_destruction_phase(instance, solution, state, rng, shaking_intensity);
-    apply_kick_phase(instance, solution, state, rng, shaking_intensity);
+    apply_kick_phase(instance, solution, state, rng);
 }
 
 fn apply_destruction_phase<R: Rng>(
@@ -47,13 +47,8 @@ fn apply_kick_phase<R: Rng>(
     instance: &Instance,
     solution: &mut Solution,
     state: &mut SearchState,
-    rng: &mut R,
-    shaking_intensity: usize,
+    rng: &mut R
 ) {
-    const MIN_SHAKING_INTENSITY: usize = 2;
-    if shaking_intensity < MIN_SHAKING_INTENSITY {
-        return;
-    }
 
     let unvisited_subgroups: Vec<usize> = (0..instance.subgroups.len())
         .filter(|subgroup_id| !state.subgroup_nodes_count.contains_key(subgroup_id))

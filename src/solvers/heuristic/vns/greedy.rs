@@ -75,7 +75,7 @@ fn find_best_subgroup_insertion<'a>(
     state: &SearchState,
 ) -> Option<(Solution<'a>, SearchState)> {
     let mut best_trial = None;
-    let mut best_ratio = -1.0;
+    let mut best_ratio = 0.0;
 
     for subgroup_id in 0..instance.subgroups.len() {
         if state.subgroup_nodes_count.contains_key(&subgroup_id) {
