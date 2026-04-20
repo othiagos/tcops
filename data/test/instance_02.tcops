@@ -1,0 +1,43 @@
+NAME: instance_02_split
+TYPE: TCOPS
+COMMENT: Forcando a separacao de um subgrupo em dois veiculos diferentes
+DIMENSION: 16
+SUBGROUPS: 8
+CLUSTERS: 4
+VEHICLES: 3
+EDGE_WEIGHT_TYPE: EUC_2D
+NODE_COORD_SECTION: id profit x y z
+0  0.0  50.0 50.0 0.0
+1  50.0 50.0 100.0 0.0
+2  50.0 100.0 50.0 0.0
+3  5.0  60.0 60.0 0.0
+4  5.0  65.0 65.0 0.0
+5  5.0  60.0 65.0 0.0
+6  50.0 0.0  50.0 0.0
+7  50.0 0.0  40.0 0.0
+8  5.0  40.0 40.0 0.0
+9  5.0  45.0 40.0 0.0
+10 5.0  40.0 45.0 0.0
+11 5.0  55.0 45.0 0.0
+12 5.0  45.0 55.0 0.0
+13 60.0 50.0 110.0 0.0
+14 40.0 110.0 50.0 0.0
+15 40.0 110.0 60.0 0.0
+SUBGROUP_SECTION: subgroup_id id-vertex-list
+0 0
+1 1 2
+2 3 4 5
+3 6 7
+4 8 9 10
+5 11 12
+6 13
+7 14 15
+CLUSTER_SECTION: cluster_id id-subgroup-list
+0 0
+1 1 2
+2 3 4 5
+3 6 7
+VEHICLES_SECTION: id tmax start_node_id end_node_id
+0 150.0 0 0
+1 150.0 0 0
+2 150.0 0 0
