@@ -1,23 +1,23 @@
 use crate::common::instance::{Node, Subgroup};
 use crate::parser::sections::common::handle_section;
-use crate::parser::utils::parse_integer;
+use crate::parser::utils::{LineTracker, parse_integer};
 use crate::parser::validator::validate_item_id;
 use std::fs::File;
 use std::io::{BufReader, Error, ErrorKind};
 
 const SUBGROUP_DATA_MIN_PARTS: usize = 2;
 
-pub fn process_subgroups(
-    reader: &mut BufReader<File>,
+pub fn process(
+    tracker: &mut LineTracker<BufReader<File>>,
     subgroups: &mut Vec<Subgroup>,
     nodes: &[Node],
 ) -> Result<(), Error> {
-    handle_section(reader, subgroups, "Subgroup", |parts| {
-        parse_subgroup(parts, nodes)
+    handle_section(tracker, subgroups, "Subgroup", |parts| {
+        parse(parts, nodes)
     })
 }
 
-fn parse_subgroup(parts: Vec<&str>, nodes: &[Node]) -> Result<Subgroup, Error> {
+fn parse(parts: Vec<&str>, nodes: &[Node]) -> Result<Subgroup, Error> {
     if parts.len() < SUBGROUP_DATA_MIN_PARTS {
         return Err(Error::new(
             ErrorKind::InvalidData,
@@ -30,7 +30,7 @@ fn parse_subgroup(parts: Vec<&str>, nodes: &[Node]) -> Result<Subgroup, Error> {
     for part in &parts[1..] {
         let node_id = parse_integer(part)?;
 
-        validate_item_id(nodes, node_id)?;
+        validate_item_id("Node", nodes, node_id)?;
         node_ids.push(node_id);
     }
 

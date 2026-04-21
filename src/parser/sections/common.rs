@@ -1,20 +1,23 @@
 use crate::common::instance::{HasId, Instance};
 use crate::parser::sections::{cluster, node, subgroup, vehicle};
-use crate::parser::utils::{get_split_line_parts, is_empty_or_comment, read_next_line};
+use crate::parser::utils::{LineTracker, get_split_line_parts, is_empty_or_comment};
 use crate::parser::validator::validate_section_data_id;
 use std::fs::File;
-use std::io::{BufRead, BufReader, Error, ErrorKind};
+use std::io::{BufReader, Error, ErrorKind};
 
 const SEC_NODES: &str = "NODE_COORD_SECTION";
 const SEC_SUBGROUPS: &str = "SUBGROUP_SECTION";
 const SEC_CLUSTERS: &str = "CLUSTER_SECTION";
 const SEC_VEHICLES: &str = "VEHICLES_SECTION";
 
-pub fn file_read_sections(instance: &mut Instance, reader: &mut BufReader<File>) -> Result<(), Error> {
-    let mut line = String::new();
+pub fn file_read_sections(
+    instance: &mut Instance,
+    tracker: &mut LineTracker<BufReader<File>>,
+) -> Result<(), Error> {
     loop {
-        line.clear();
-        if reader.read_line(&mut line)? == 0 {
+        let line = tracker.read_next_valid_line()?;
+
+        if line.is_empty() {
             break;
         }
 
@@ -25,10 +28,10 @@ pub fn file_read_sections(instance: &mut Instance, reader: &mut BufReader<File>)
         }
 
         match section {
-            SEC_NODES => node::process_nodes(reader, &mut instance.nodes)?,
-            SEC_SUBGROUPS => subgroup::process_subgroups(reader, &mut instance.subgroups, &instance.nodes)?,
-            SEC_CLUSTERS =>  cluster::process_clusters(reader, &mut instance.clusters, &instance.subgroups)?,
-            SEC_VEHICLES => vehicle::process_vehicles(reader, &mut instance.vehicles, &instance.nodes)?,
+            SEC_NODES => node::process(tracker, &mut instance.nodes)?,
+            SEC_SUBGROUPS => subgroup::process(tracker, &mut instance.subgroups, &instance.nodes)?,
+            SEC_CLUSTERS => cluster::process(tracker, &mut instance.clusters, &instance.subgroups)?,
+            SEC_VEHICLES => vehicle::process(tracker, &mut instance.vehicles, &instance.nodes)?,
             _ => process_default_section(section)?,
         }
     }
@@ -37,7 +40,7 @@ pub fn file_read_sections(instance: &mut Instance, reader: &mut BufReader<File>)
 }
 
 pub fn handle_section<T, F>(
-    reader: &mut BufReader<File>,
+    tracker: &mut LineTracker<BufReader<File>>,
     container: &mut Vec<T>,
     section_name: &str,
     parser: F,
@@ -47,7 +50,7 @@ where
     F: Fn(Vec<&str>) -> Result<T, Error>,
 {
     while container.len() < container.capacity() {
-        let line = read_next_line(reader)?;
+        let line = tracker.read_next_valid_line()?;
         let parts: Vec<&str> = line.split_whitespace().collect();
 
         let item = parser(parts)?;

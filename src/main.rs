@@ -22,7 +22,7 @@ fn main() {
     let (instance, folder_path) = match parser::load_instance(&args.input) {
         Ok((inst, folder)) => (inst, folder),
         Err(e) => {
-            eprintln!("Fail to load instance {:?}: {}", args.input, e);
+            eprintln!("Fail to load instance {:?}\n{}", args.input, e);
             std::process::exit(1);
         }
     };

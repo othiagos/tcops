@@ -1,7 +1,4 @@
-use std::{
-    fs::File,
-    io::{BufRead, BufReader, Error, ErrorKind},
-};
+use std::io::{BufRead, Error, ErrorKind};
 
 pub fn get_split_line_parts(line: &str) -> Vec<&str> {
     line.trim().split(":").collect()
@@ -30,27 +27,37 @@ pub fn is_empty_or_comment(line: &str) -> bool {
     trimmed.is_empty() || trimmed.starts_with('#')
 }
 
-pub fn read_next_line(reader: &mut BufReader<File>) -> Result<String, Error> {
-    loop {
-        let mut line = String::new();
-
-        if reader.read_line(&mut line)? == 0 {
-            break;
-        }
-
-        if !is_empty_or_comment(&line) {
-            return Ok(line);
-        }
-    }
-
-    Ok("".to_owned())
+pub struct LineTracker<R> {
+    reader: R,
+    current_line: usize,
 }
 
-pub fn ignore_line(reader: &mut BufReader<File>, ignore_lines: usize) -> Result<(), Error> {
-    for _ in 0..ignore_lines {
-        let mut line = String::new();
-        reader.read_line(&mut line)?;
+impl<T: BufRead> LineTracker<T> {
+    pub fn new(reader: T) -> Self {
+        Self {
+            reader,
+            current_line: 0,
+        }
     }
 
-    Ok(())
+    pub fn current_line(&self) -> usize {
+        self.current_line
+    }
+
+    pub fn read_next_valid_line(&mut self) -> Result<String, Error> {
+        loop {
+            let mut line = String::new();
+            let bytes_read = self.reader.read_line(&mut line)?;
+
+            if bytes_read == 0 {
+                return Ok(String::new());
+            }
+
+            self.current_line += 1;
+
+            if !is_empty_or_comment(&line) {
+                return Ok(line);
+            }
+        }
+    }
 }

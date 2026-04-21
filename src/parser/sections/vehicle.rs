@@ -1,23 +1,23 @@
 use crate::common::instance::{Node, Vehicle};
 use crate::parser::sections::common::handle_section;
-use crate::parser::utils::{parse_float, parse_integer};
+use crate::parser::utils::{LineTracker, parse_float, parse_integer};
 use crate::parser::validator::validate_item_id;
 use std::fs::File;
 use std::io::{BufReader, Error, ErrorKind};
 
 const VEHICLE_DATA_MIN_PARTS: usize = 4;
 
-pub fn process_vehicles(
-    reader: &mut BufReader<File>,
+pub fn process(
+    tracker: &mut LineTracker<BufReader<File>>,
     vehicles: &mut Vec<Vehicle>,
     nodes: &[Node],
 ) -> Result<(), Error> {
-    handle_section(reader, vehicles, "Vehicle", |parts| {
-        parse_vehicle(parts, nodes)
+    handle_section(tracker, vehicles, "Vehicle", |parts| {
+        parse(parts, nodes)
     })
 }
 
-fn parse_vehicle(parts: Vec<&str>, nodes: &[Node]) -> Result<Vehicle, Error> {
+fn parse(parts: Vec<&str>, nodes: &[Node]) -> Result<Vehicle, Error> {
     if parts.len() < VEHICLE_DATA_MIN_PARTS {
         return Err(Error::new(
             ErrorKind::InvalidData,
@@ -30,8 +30,8 @@ fn parse_vehicle(parts: Vec<&str>, nodes: &[Node]) -> Result<Vehicle, Error> {
     let start_node_id = parse_integer(parts[2])?;
     let end_node_id = parse_integer(parts[3])?;
 
-    validate_item_id(nodes, start_node_id)?;
-    validate_item_id(nodes, end_node_id)?;
+    validate_item_id("Node", nodes, start_node_id)?;
+    validate_item_id("Node", nodes, end_node_id)?;
 
     Ok(Vehicle {
         id,
