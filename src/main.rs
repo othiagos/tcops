@@ -5,9 +5,9 @@ mod common;
 mod exporter;
 mod plotter;
 mod solvers;
+mod parser;
 
 use cli::{Cli, SolverMode};
-use common::parser;
 use exporter::io;
 use plotter::plot;
 use solvers::exact;
