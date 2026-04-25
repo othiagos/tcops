@@ -1,4 +1,4 @@
-use crate::common::{constants::DISTANCE_PENALTY, instance::Instance};
+use crate::common::instance::Instance;
 
 #[derive(Debug, Clone, PartialEq, Default)]
 pub enum SolutionStatus {
@@ -27,6 +27,6 @@ pub struct Solution<'a> {
 
 impl<'a> Solution<'a> {
     pub fn get_objective_value(&self) -> f64 {
-        self.total_score - (self.total_cost * DISTANCE_PENALTY)
+        self.total_score
     }
 }

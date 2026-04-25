@@ -17,8 +17,12 @@ pub struct Cli {
     #[arg(long, value_enum)]
     pub mode: SolverMode,
 
-    /// Mathematical solver type (Required if mode=exact)
+    /// Mathematical library to use for the exact solver (Required if mode=exact)
     #[arg(long, value_enum, required_if_eq("mode", "exact"))]
+    pub library: Option<LibraryType>,
+
+    /// Mathematical solver type (Required if library=good-lp)
+    #[arg(long, value_enum, required_if_eq("library", "good-lp"))]
     pub solver: Option<ExactSolverType>,
 
     /// Maximum iterations without improvement for the VNS (Only for mode=heuristic)
@@ -36,12 +40,22 @@ pub struct Cli {
     /// Saves the solution result to an output file
     #[arg(long, default_value_t = false)]
     pub save: bool,
+
+    /// Time limit for the exact solver gurobi in seconds (Only for mode=exact)
+    #[arg(long)]
+    pub time_limit: Option<u64>,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug)]
 pub enum SolverMode {
     Exact,
     Heuristic,
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug)]
+pub enum LibraryType {
+    GoodLp,
+    Gurobi,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug)]
