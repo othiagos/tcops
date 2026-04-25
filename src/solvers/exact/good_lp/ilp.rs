@@ -7,7 +7,7 @@ use crate::common::{
     solution::Solution,
 };
 
-use crate::solvers::exact::{constraint, objective, parser, variable};
+use crate::solvers::exact::good_lp::{constraint, objective, parser, variable};
 
 pub struct DecisionVariables {
     pub x: Vec<Vec<Vec<Variable>>>,

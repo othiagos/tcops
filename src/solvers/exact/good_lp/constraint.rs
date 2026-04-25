@@ -4,7 +4,7 @@ use good_lp::{Constraint, Expression};
 
 use crate::common::instance::Instance;
 
-use crate::solvers::exact::ilp::DecisionVariables;
+use crate::solvers::exact::good_lp::ilp::DecisionVariables;
 
 pub fn flow_conservation(variable: &DecisionVariables, instance: &Instance) -> Vec<Constraint> {
     let mut constraints = Vec::new();

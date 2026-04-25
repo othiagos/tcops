@@ -5,7 +5,7 @@ use crate::common::{
     solution::{Route, Solution, SolutionStatus},
 };
 
-use crate::solvers::exact::ilp::DecisionVariables;
+use crate::solvers::exact::good_lp::ilp::DecisionVariables;
 
 pub fn parse_solution<'a, S: SolutionTrait>(
     solution: S,
