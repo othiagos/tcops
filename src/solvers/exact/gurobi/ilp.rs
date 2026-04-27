@@ -1,10 +1,12 @@
+#![allow(clippy::useless_conversion)]
+
 use grb::prelude::*;
 
 use crate::{common::{
     error::{SolverError, SolverErrorKind},
     instance::Instance,
     solution::Solution,
-}, solvers::exact::gurobi::{constraint, objective, parser, variable}};
+}, solvers::exact::gurobi::{constraint, objective, parser, variable, callback}};
 
 use crate::cli::Cli;
 pub use variable::DecisionVariables;
@@ -24,9 +26,8 @@ impl<'a> Ilp<'a> {
         let y = variable::initialize_y(&mut model, instance)?;
         let z = variable::initialize_z(&mut model, instance)?;
         let w = variable::initialize_w(&mut model, instance)?;
-        let u = variable::initialize_u(&mut model, instance)?;
 
-        let variables = DecisionVariables { x, y, z, w, u };
+        let variables = DecisionVariables { x, y, z, w };
 
         Ok(Self {
             model,
@@ -42,17 +43,20 @@ impl<'a> Ilp<'a> {
 
         self.model.set_param(param::LazyConstraints, 1).map_err(Self::map_err)?;
 
-       
         constraint::flow_conservation(&mut self.model, &self.variables, self.instance).map_err(Self::map_err)?;
         constraint::unique_visit(&mut self.model, &self.variables, self.instance).map_err(Self::map_err)?;
         constraint::logical_physical(&mut self.model, &self.variables, self.instance).map_err(Self::map_err)?;
         constraint::cluster(&mut self.model, &self.variables, self.instance).map_err(Self::map_err)?;
         constraint::budget(&mut self.model, &self.variables, self.instance).map_err(Self::map_err)?;
-        constraint::subtour_elimination_mtz(&mut self.model, &self.variables, self.instance).map_err(Self::map_err)?;
         
         objective::set_objective(&mut self.model, &self.variables, self.instance).map_err(Self::map_err)?;
 
-        self.model.optimize().map_err(Self::map_err)?;
+        let mut subtour_cb: callback::SubtourCallback<'_> = callback::SubtourCallback {
+            variables: &self.variables,
+            instance: self.instance,
+        };
+
+        self.model.optimize_with_callback(&mut subtour_cb).map_err(Self::map_err)?;
         let status = self.model.status().map_err(Self::map_err)?;
         
         match status {

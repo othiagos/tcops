@@ -6,7 +6,6 @@ pub struct DecisionVariables {
     pub y: Vec<Vec<Var>>,
     pub z: Vec<Var>,
     pub w: Vec<Var>,
-    pub u: Vec<Vec<Var>>,
 }
 
 pub fn initialize_x(model: &mut Model, instance: &Instance) -> grb::Result<Vec<Vec<Vec<Var>>>> {
@@ -71,25 +70,4 @@ pub fn initialize_w(model: &mut Model, instance: &Instance) -> grb::Result<Vec<V
     }
 
     Ok(w)
-}
-
-pub fn initialize_u(model: &mut Model, instance: &Instance) -> grb::Result<Vec<Vec<Var>>> {
-    let num_nodes = instance.nodes.len();
-    let num_vehicles = instance.vehicles.len();
-    let mut u = Vec::with_capacity(num_vehicles);
-
-    for k in 0..num_vehicles {
-        let mut u_k = Vec::with_capacity(num_nodes);
-        for i in 0..num_nodes {
-            let var = add_var!(
-                model,
-                Continuous,
-                name: &format!("u_{}_{}", k, i),
-                bounds: 1.0_f32..num_nodes
-            )?;
-            u_k.push(var);
-        }
-        u.push(u_k);
-    }
-    Ok(u)
 }

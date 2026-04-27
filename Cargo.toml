@@ -12,3 +12,4 @@ tempfile = "3.26"
 good_lp = { version = "1.14", features = ["lp-solvers","scip"], default-features = false }
 scip-sys = { version = "0.1", features = ["bundled"] }
 grb = { version = "3.0", features = ['gurobi12']}
+anyhow = "1.0"

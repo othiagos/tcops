@@ -144,36 +144,3 @@ pub fn budget(
 
     Ok(())
 }
-
-pub fn subtour_elimination_mtz(
-    model: &mut Model,
-    variable: &DecisionVariables,
-    instance: &Instance,
-) -> grb::Result<()> {
-    let n = instance.nodes.len() as f64;
-
-    let mut depot_nodes = HashSet::new();
-    for vehicle in instance.vehicles.iter() {
-        depot_nodes.insert(vehicle.start_node_id);
-        depot_nodes.insert(vehicle.end_node_id);
-    }
-
-    for k in 0..instance.vehicles.len() {
-        for i in 0..instance.nodes.len() {
-            for j in 0..instance.nodes.len() {
-                if depot_nodes.contains(&i) || depot_nodes.contains(&j) {
-                    continue;
-                }
-
-                if i != j {
-                    model.add_constr(
-                        &format!("mtz_v{}_n{}_n{}", k, i, j),
-                        c!(variable.u[k][i] - variable.u[k][j] + n * variable.x[k][i][j] <= n - 1.0)
-                    )?;
-                }
-            }
-        }
-    }
-
-    Ok(())
-}

@@ -7,6 +7,7 @@ use crate::{
     },
 };
 
+pub mod callback;
 pub mod constraint;
 pub mod ilp;
 pub mod objective;
@@ -16,7 +17,6 @@ pub mod variable;
 use ilp::Ilp;
 
 pub fn solve<'a>(instance: &'a Instance, args: &Cli) -> Result<Solution<'a>, SolverError> {
-    
     let ilp = Ilp::new(instance).map_err(|e| {
         SolverError::new(
             SolverErrorKind::Solver,
