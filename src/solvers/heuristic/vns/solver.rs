@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use rand::thread_rng;
 
 use crate::{
@@ -13,13 +15,14 @@ pub fn solve<'a>(
     max_iterations_without_improvement: usize,
     max_shaking_intensity: usize,
 ) -> Result<Solution<'a>, SolverError> {
+    let start_time = Instant::now();
+
     let (mut best_solution, mut best_state) = build_greedy_solution(instance)?;
     local_search_insertions(instance, &mut best_solution, &mut best_state);
 
     println!(
-        "Starting solution found! Objective: {:.2} | Score: {:.2} | Cost: {:.2}",
+        "Starting solution found! Objective: {:.2} | Cost: {:.2}",
         best_solution.get_objective_value(),
-        best_solution.total_score,
         best_solution.total_cost
     );
 
@@ -43,11 +46,12 @@ pub fn solve<'a>(
                 iter_without_improvement = 0;
 
                 println!(
-                    "New best solution found! Objective: {:.2} | Score: {:.2} | Cost: {:.2}",
+                    "New best solution found! Objective: {:.2} | Cost: {:.2}",
                     best_solution.get_objective_value(),
-                    best_solution.total_score,
                     best_solution.total_cost
                 );
+
+                break;
             }
         }
     }
@@ -63,6 +67,8 @@ pub fn solve<'a>(
 
         best_solution.total_cost += route.cost;
     }
+
+    best_solution.duration = start_time.elapsed();
 
     Ok(best_solution)
 }

@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use crate::common::{
     constants::EPSILON,
     error::SolverError,
@@ -49,6 +51,7 @@ fn initialize_empty_solution(instance: &'_ Instance) -> (Solution<'_>, SearchSta
 
     let solution = Solution {
         instance,
+        duration: Duration::from_secs(0),
         total_score: 0.0,
         total_cost: initial_total_cost,
         routes,

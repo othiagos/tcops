@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use good_lp::Solution as SolutionTrait;
 
 use crate::common::{
@@ -11,6 +13,7 @@ pub fn parse_solution<'a, S: SolutionTrait>(
     solution: S,
     variables: DecisionVariables,
     instance: &'a Instance,
+    duration: Duration,
 ) -> Solution<'a> {
     let mut routes: Vec<Route> = Vec::new();
     for k in 0..instance.vehicles.len() {
@@ -25,6 +28,7 @@ pub fn parse_solution<'a, S: SolutionTrait>(
 
     Solution {
         instance,
+        duration,
         total_score,
         total_cost,
         routes,

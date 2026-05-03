@@ -9,7 +9,7 @@ use std::fs::File;
 use std::io::{BufReader, Error};
 use std::path::Path;
 
-pub fn load_instance(path: &Path) -> Result<(Instance, String), Error> {
+pub fn load_instance(path: &Path) -> Result<Instance, Error> {
     let file = File::open(path)?;
     let reader = BufReader::new(file);
 
@@ -35,7 +35,9 @@ pub fn load_instance(path: &Path) -> Result<(Instance, String), Error> {
         }
     };
 
-    Ok((instance, folder_path.to_string()))
+    instance.folder_path = folder_path.to_string();
+
+    Ok(instance)
 }
 
 fn format_err(line_num: usize, e: Error) -> Error {

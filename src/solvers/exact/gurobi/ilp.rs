@@ -1,5 +1,7 @@
 #![allow(clippy::useless_conversion)]
 
+use std::time::Instant;
+
 use grb::prelude::*;
 
 use crate::{common::{
@@ -37,6 +39,7 @@ impl<'a> Ilp<'a> {
     }
 
     pub fn solve(mut self, args: &Cli) -> Result<Solution<'a>, SolverError> {
+        let start_time = Instant::now();
         if let Some(limit) = args.time_limit {
             self.model.set_param(param::TimeLimit, limit as f64).map_err(Self::map_err)?;
         }
@@ -61,7 +64,7 @@ impl<'a> Ilp<'a> {
         
         match status {
             Status::Optimal | Status::TimeLimit | Status::IterationLimit => {
-                parser::parse_solution(&self.model, &self.variables, self.instance).map_err(|e| {
+                parser::parse_solution(&self.model, &self.variables, self.instance, start_time.elapsed()).map_err(|e| {
                     SolverError::new(
                         SolverErrorKind::Parser,
                         &format!("Error parsing Gurobi results: {}", e),

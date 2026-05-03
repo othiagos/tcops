@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::fs::File;
 use std::io::BufWriter;
 
@@ -28,40 +29,87 @@ struct Cluster {
 }
 
 #[derive(Serialize)]
+struct Vehicle {
+    id: usize,
+    budget: f64,
+}
+
+#[derive(Serialize)]
+struct Route {
+    vehicle_id: usize,
+    path: Vec<usize>,
+}
+
+#[derive(Serialize)]
 struct JsonSolution {
+    instance_name: String,
     mode: String,
+    elapsed_time_sec: f64,
+    status: String,
+    total_cost: f64,
+    total_score: f64,
+    vehicles_used_ids: Vec<usize>,
+    clusters_visited_ids: Vec<usize>,
+    subgroups_visited_ids: Vec<usize>,
     nodes: Vec<Node>,
     subgroups: Vec<Subgroup>,
     clusters: Vec<Cluster>,
-    routes: Vec<Vec<usize>>,
+    vehicles: Vec<Vehicle>,
+    routes: Vec<Route>,
 }
 
-pub fn export_solution_to_json(path: &str, solution: &Solution) {
+pub fn export_solution_to_json(solution: &Solution) -> Option<String> {
+    let instance_name = solution.instance.name.clone();
     let mode = get_mode(solution);
+    let elapsed_time_sec = solution.duration.as_secs_f64();
+    let total_cost = solution.total_cost;
+    let total_score = solution.total_score;
+    let vehicles_used_ids = get_vehicles_used(solution);
+    let clusters_visited_ids = get_clusters_visited(solution);
+    let subgroups_visited_ids = get_subgroups_visited(solution);
+    let status = solution.status.clone().to_string();
     let nodes = get_node(solution);
     let subgroups = get_subgroup(solution);
     let clusters = get_cluster(solution);
+    let vehicles = get_vehicles(solution);
     let routes = get_routes(solution);
 
     let json_solution = JsonSolution {
+        instance_name,
         mode,
+        elapsed_time_sec,
+        status,
+        total_cost,
+        total_score,
+        vehicles_used_ids,
+        clusters_visited_ids,
+        subgroups_visited_ids,
         nodes,
         subgroups,
         clusters,
+        vehicles,
         routes,
     };
 
-    let file = match File::create(path) {
+    let path = format!(
+        "{}/{}.json",
+        solution.instance.folder_path, solution.instance.name
+    );
+
+    let file = match File::create(&path) {
         Ok(f) => f,
         Err(e) => {
             eprintln!("Failed to create JSON file: {}", e);
-            return;
+            return None;
         }
     };
 
     if let Err(e) = serde_json::to_writer_pretty(BufWriter::new(file), &json_solution) {
-        eprintln!("Failed to write JSON: {}", e)
+        eprintln!("Failed to write JSON: {}", e);
+        return None;
     }
+
+    Some(path)
 }
 
 fn get_mode(solution: &Solution) -> String {
@@ -110,6 +158,64 @@ fn get_cluster(solution: &Solution) -> Vec<Cluster> {
         .collect()
 }
 
-fn get_routes(solution: &Solution) -> Vec<Vec<usize>> {
-    solution.routes.iter().map(|r| r.path.clone()).collect()
+fn get_vehicles(solution: &Solution) -> Vec<Vehicle> {
+    solution
+        .instance
+        .vehicles
+        .iter()
+        .map(|v| Vehicle {
+            id: v.id,
+            budget: v.budget,
+        })
+        .collect()
+}
+
+fn get_routes(solution: &Solution) -> Vec<Route> {
+    solution.routes.iter().map(|r| Route {
+        vehicle_id: r.vehicle_id,
+        path: r.path.clone(),
+    }).collect()
+}
+
+fn get_vehicles_used(solution: &Solution) -> Vec<usize> {
+    let mut used_vehicles = HashSet::new();
+
+    for route in &solution.routes {
+        if route.path.len() > 2 {
+            used_vehicles.insert(route.vehicle_id);
+        }
+    }
+
+    used_vehicles.into_iter().collect()
+}
+
+fn get_clusters_visited(solution: &Solution) -> Vec<usize> {
+    let mut visited_clusters = HashSet::new();
+
+    for route in &solution.routes {
+        for &node_id in &route.path {
+            let node = &solution.instance.nodes[node_id];
+            for &sg_id in &node.parent_subgroup_ids {
+                let c_id = solution.instance.subgroups[sg_id].parent_cluster_id;
+                visited_clusters.insert(c_id);
+            }
+        }
+    }
+
+    visited_clusters.into_iter().collect()
+}
+
+fn get_subgroups_visited(solution: &Solution) -> Vec<usize> {
+    let mut visited_subgroups = HashSet::new();
+
+    for route in &solution.routes {
+        for &node_id in &route.path {
+            let node = &solution.instance.nodes[node_id];
+            for &sg_id in &node.parent_subgroup_ids {
+                visited_subgroups.insert(sg_id);
+            }
+        }
+    }
+
+    visited_subgroups.into_iter().collect()
 }

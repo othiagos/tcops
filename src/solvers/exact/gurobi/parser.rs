@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use grb::prelude::*;
 
 use crate::common::{
@@ -11,6 +13,7 @@ pub fn parse_solution<'a>(
     model: &Model,
     variables: &DecisionVariables,
     instance: &'a Instance,
+    duration: Duration,
 ) -> grb::Result<Solution<'a>> {
     let mut routes: Vec<Route> = Vec::new();
 
@@ -25,6 +28,7 @@ pub fn parse_solution<'a>(
 
     Ok(Solution {
         instance,
+        duration,
         total_score,
         total_cost,
         routes,

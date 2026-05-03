@@ -120,12 +120,16 @@ class Visualizer:
         for nid, n in self.nodes.items():
             ax.scatter(n[0], n[1], c='black', marker='o', s=20, zorder=3)
 
-        for i, route in enumerate(self.data['routes']):
-            valid_pts = [self.nodes[nid] for nid in route if nid in self.nodes]
+        for route_obj in self.data['routes']:
+            v_id = route_obj['vehicle_id']
+            path = route_obj['path']
+            
+            valid_pts = [self.nodes[nid] for nid in path if nid in self.nodes]
             if not valid_pts: continue
             pts = np.array(valid_pts)
-            c = self._get_route_color(i)
-            ax.plot(pts[:,0], pts[:,1], '-', color=c, linewidth=2, label=f'Vehicles {i}', zorder=4)
+            
+            c = self._get_route_color(v_id)
+            ax.plot(pts[:,0], pts[:,1], '-', color=c, linewidth=2, label=f'Vehicle {v_id}', zorder=4)
 
         sm = cm.ScalarMappable(cmap=self.cmap_heat, norm=self.norm)
         sm.set_array([])
@@ -167,12 +171,16 @@ class Visualizer:
         for nid, n in self.nodes.items():
             ax.scatter(n[0], n[1], n[2], c='black', marker='o', s=20, depthshade=False)
 
-        for i, route in enumerate(self.data['routes']):
-            valid_pts = [self.nodes[nid] for nid in route if nid in self.nodes]
+        for route_obj in self.data['routes']:
+            v_id = route_obj['vehicle_id']
+            path = route_obj['path']
+            
+            valid_pts = [self.nodes[nid] for nid in path if nid in self.nodes]
             if not valid_pts: continue
             pts = np.array(valid_pts)
-            c = self._get_route_color(i)
-            ax.plot(pts[:,0], pts[:,1], pts[:,2], '-', color=c, linewidth=2, label=f'Vehicles {i}')
+            
+            c = self._get_route_color(v_id)
+            ax.plot(pts[:,0], pts[:,1], pts[:,2], '-', color=c, linewidth=2, label=f'Vehicle {v_id}')
 
         sm = cm.ScalarMappable(cmap=self.cmap_heat, norm=self.norm)
         sm.set_array([])

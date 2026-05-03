@@ -1,3 +1,6 @@
+use std::fmt;
+use std::time::Duration;
+
 use crate::common::instance::Instance;
 
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -6,6 +9,16 @@ pub enum SolutionStatus {
     Feasible,
     #[default]
     Unknown,
+}
+
+impl fmt::Display for SolutionStatus {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            SolutionStatus::Optimal => write!(f, "Optimal"),
+            SolutionStatus::Feasible => write!(f, "Feasible"),
+            SolutionStatus::Unknown => write!(f, "Unknown"),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Default)]
@@ -19,6 +32,7 @@ pub struct Route {
 #[derive(Debug, Clone)]
 pub struct Solution<'a> {
     pub instance: &'a Instance,
+    pub duration: Duration,
     pub routes: Vec<Route>,
     pub total_cost: f64,
     pub total_score: f64,

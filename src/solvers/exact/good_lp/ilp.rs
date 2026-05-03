@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use good_lp::Solver;
 use good_lp::{Constraint, Expression, ProblemVariables, SolverModel, Variable, variables};
 
@@ -68,6 +70,8 @@ impl<'a> Ilp<'a> {
         M: SolverModel,
         F: FnOnce(S::Model) -> M,
     {
+        let start_time = Instant::now();
+        
         let Ilp {
             vars,
             constraints,
@@ -84,7 +88,7 @@ impl<'a> Ilp<'a> {
         let configured_model = configure(base_model);
 
         match configured_model.solve() {
-            Ok(solution) => Ok(parser::parse_solution(solution, variables, instance)),
+            Ok(solution) => Ok(parser::parse_solution(solution, variables, instance, start_time.elapsed())),
             Err(e) => Err(SolverError::new(
                 SolverErrorKind::Solver,
                 &format!("Error in Solver: {}", e),

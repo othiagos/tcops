@@ -82,6 +82,7 @@ pub struct Vehicle {
 
 #[derive(Debug, Clone, Default)]
 pub struct Instance {
+    pub folder_path: String,
     pub name: String,
     pub metric: Metric,
     pub nodes: Vec<Node>,
