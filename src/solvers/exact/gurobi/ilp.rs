@@ -4,11 +4,20 @@ use std::time::Instant;
 
 use grb::prelude::*;
 
-use crate::{common::{
-    error::{SolverError, SolverErrorKind},
-    instance::Instance,
-    solution::Solution,
-}, solvers::exact::gurobi::{constraint, objective, parser, variable, callback}};
+use crate::{
+    common::{
+        error::{SolverError, SolverErrorKind},
+        instance::Instance,
+        solution::Solution,
+    }, 
+    solvers::exact::gurobi::{
+        callback::subtour::SubtourCallback,
+        constraint,
+        objective, 
+        parser,
+        variable
+    }
+};
 
 use crate::cli::Cli;
 pub use variable::DecisionVariables;
@@ -54,12 +63,9 @@ impl<'a> Ilp<'a> {
         
         objective::set_objective(&mut self.model, &self.variables, self.instance).map_err(Self::map_err)?;
 
-        let mut subtour_cb: callback::SubtourCallback<'_> = callback::SubtourCallback {
-            variables: &self.variables,
-            instance: self.instance,
-        };
+        let mut callback = SubtourCallback::new(&self.variables, self.instance);
 
-        self.model.optimize_with_callback(&mut subtour_cb).map_err(Self::map_err)?;
+        self.model.optimize_with_callback(&mut callback).map_err(Self::map_err)?;
         let status = self.model.status().map_err(Self::map_err)?;
         
         match status {
