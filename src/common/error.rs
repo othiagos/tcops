@@ -34,3 +34,12 @@ impl fmt::Display for SolverError {
         write!(f, "{}", self.message)
     }
 }
+
+impl From<grb::Error> for SolverError {
+    fn from(error: grb::Error) -> Self {
+        SolverError::new(
+            SolverErrorKind::Solver,
+            &format!("Gurobi error: {}", error),
+        )
+    }
+}

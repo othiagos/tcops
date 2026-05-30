@@ -1,5 +1,3 @@
-#![allow(clippy::useless_conversion)]
-
 use std::time::Instant;
 
 use grb::prelude::*;
@@ -9,7 +7,7 @@ use crate::{
         error::{SolverError, SolverErrorKind},
         instance::Instance,
         solution::{Solution, SolverMetrics},
-    }, 
+    },
     solvers::exact::gurobi::{
         callback::subtour::SubtourCallback,
         constraint,
@@ -49,52 +47,83 @@ impl<'a> Ilp<'a> {
 
     pub fn solve(mut self, args: &Cli) -> Result<Solution<'a>, SolverError> {
         let start_time = Instant::now();
-        if let Some(limit) = args.time_limit {
-            self.model.set_param(param::TimeLimit, limit as f64).map_err(Self::map_err)?;
-        }
 
-        self.model.set_param(param::LazyConstraints, 1).map_err(Self::map_err)?;
-        self.model.get_env_mut().read_params("gurobi.prm").map_err(Self::map_err)?;
+        self.configure_solver(args)?;
 
-        constraint::flow_conservation(&mut self.model, &self.variables, self.instance).map_err(Self::map_err)?;
-        constraint::unique_visit(&mut self.model, &self.variables, self.instance).map_err(Self::map_err)?;
-        constraint::logical_physical(&mut self.model, &self.variables, self.instance).map_err(Self::map_err)?;
-        constraint::cluster(&mut self.model, &self.variables, self.instance).map_err(Self::map_err)?;
-        constraint::budget(&mut self.model, &self.variables, self.instance).map_err(Self::map_err)?;
-        
-        objective::set_objective(&mut self.model, &self.variables, self.instance).map_err(Self::map_err)?;
+        self.build_model()?;
 
         let mut callback = SubtourCallback::new(&self.variables, self.instance);
+        self.model.optimize_with_callback(&mut callback)?;
 
-        self.model.optimize_with_callback(&mut callback).map_err(Self::map_err)?;
-        let status = self.model.status().map_err(Self::map_err)?;
-        
+        self.extract_solution(start_time)
+    }
+
+    fn configure_solver(&mut self, args: &Cli) -> Result<(), SolverError> {
+        if let Some(limit) = args.time_limit {
+            self.model.set_param(param::TimeLimit, limit as f64)?;
+        }
+
+        self.model.set_param(param::LazyConstraints, 1)?;
+        self.model.get_env_mut().read_params("gurobi.prm")?;
+
+        Ok(())
+    }
+
+    fn build_model(&mut self) -> Result<(), SolverError> {
+        let m = &mut self.model;
+        let v = &self.variables;
+        let i = self.instance;
+
+        constraint::flow_conservation(m, v, i)?;
+        constraint::unique_visit(m, v, i)?;
+        constraint::logical_physical(m, v, i)?;
+        constraint::cluster(m, v, i)?;
+        constraint::budget(m, v, i)?;
+
+        objective::set_objective(m, v, i)?;
+
+        Ok(())
+    }
+
+    fn extract_solution(&self, start_time: Instant) -> Result<Solution<'a>, SolverError> {
+        let status = self.model.status()?;
+
         match status {
             Status::Optimal | Status::TimeLimit | Status::IterationLimit => {
-                let metrics = SolverMetrics {
-                    best_bound: self.model.get_attr(attr::ObjBound).ok(),
-                    gap: self.model.get_attr(attr::MIPGap).ok(),
-                    explored_nodes: self.model.get_attr(attr::NodeCount).ok().map(|n| n as u64),
-                };
-
-                parser::parse_solution(&self.model, &self.variables, self.instance, start_time.elapsed(), metrics).map_err(|e| {
-                    SolverError::new(
-                        SolverErrorKind::Parser,
-                        &format!("Error parsing Gurobi results: {}", e),
-                    )
-                })
+                self.handle_successful_solution(start_time)
             }
-            _ => Err(SolverError::new(
-                SolverErrorKind::Solver,
-                &format!("Gurobi failed to find a solution. Status: {:?}", status),
-            )),
+            _ => {
+                self.handle_failed_solution(status)
+            }
         }
     }
 
-    fn map_err(e: grb::Error) -> SolverError {
-        SolverError::new(
-            SolverErrorKind::Solver,
-            &format!("Gurobi Error: {}", e),
+    fn handle_successful_solution(&self, start_time: Instant) -> Result<Solution<'a>, SolverError> {
+        let metrics = SolverMetrics {
+            best_bound: self.model.get_attr(attr::ObjBound).ok(),
+            gap: self.model.get_attr(attr::MIPGap).ok(),
+            explored_nodes: self.model.get_attr(attr::NodeCount).ok().map(|n| n as u64),
+        };
+
+        parser::parse_solution(
+            &self.model,
+            &self.variables,
+            self.instance,
+            start_time.elapsed(),
+            metrics,
         )
+        .map_err(|e| {
+            SolverError::new(
+                SolverErrorKind::Parser,
+                &format!("Error parsing Gurobi results: {}", e),
+            )
+        })
+    }
+
+    fn handle_failed_solution(&self, status: Status) -> Result<Solution<'a>, SolverError> {
+        Err(SolverError::new(
+            SolverErrorKind::Solver,
+            &format!("Gurobi failed to find a solution. Status: {:?}", status),
+        ))
     }
 }
