@@ -54,6 +54,7 @@ impl<'a> Ilp<'a> {
         }
 
         self.model.set_param(param::LazyConstraints, 1).map_err(Self::map_err)?;
+        self.model.get_env_mut().read_params("gurobi.prm").map_err(Self::map_err)?;
 
         constraint::flow_conservation(&mut self.model, &self.variables, self.instance).map_err(Self::map_err)?;
         constraint::unique_visit(&mut self.model, &self.variables, self.instance).map_err(Self::map_err)?;
