@@ -8,7 +8,7 @@ use crate::{
     common::{
         error::{SolverError, SolverErrorKind},
         instance::Instance,
-        solution::Solution,
+        solution::{Solution, SolverMetrics},
     }, 
     solvers::exact::gurobi::{
         callback::subtour::SubtourCallback,
@@ -70,7 +70,13 @@ impl<'a> Ilp<'a> {
         
         match status {
             Status::Optimal | Status::TimeLimit | Status::IterationLimit => {
-                parser::parse_solution(&self.model, &self.variables, self.instance, start_time.elapsed()).map_err(|e| {
+                let metrics = SolverMetrics {
+                    best_bound: self.model.get_attr(attr::ObjBound).ok(),
+                    gap: self.model.get_attr(attr::MIPGap).ok(),
+                    explored_nodes: self.model.get_attr(attr::NodeCount).ok().map(|n| n as u64),
+                };
+
+                parser::parse_solution(&self.model, &self.variables, self.instance, start_time.elapsed(), metrics).map_err(|e| {
                     SolverError::new(
                         SolverErrorKind::Parser,
                         &format!("Error parsing Gurobi results: {}", e),

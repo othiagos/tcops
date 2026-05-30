@@ -37,6 +37,17 @@ pub struct Solution<'a> {
     pub total_cost: f64,
     pub total_score: f64,
     pub status: SolutionStatus,
+    pub solver: Option<String>,
+    pub best_bound: Option<f64>,
+    pub gap: Option<f64>,
+    pub explored_nodes: Option<u64>,
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct SolverMetrics {
+    pub best_bound: Option<f64>,
+    pub gap: Option<f64>,
+    pub explored_nodes: Option<u64>,
 }
 
 impl<'a> Solution<'a> {

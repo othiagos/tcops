@@ -33,6 +33,10 @@ pub fn parse_solution<'a, S: SolutionTrait>(
         total_cost,
         routes,
         status: SolutionStatus::Optimal,
+        solver: Some("Good LP".to_string()),
+        best_bound: None,
+        gap: None,
+        explored_nodes: None,
     }
 }
 

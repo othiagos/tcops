@@ -13,6 +13,7 @@ struct Node {
     x: f64,
     y: f64,
     z: f64,
+    parent_subgroup_ids: Vec<usize>,
 }
 
 #[derive(Serialize)]
@@ -32,6 +33,8 @@ struct Cluster {
 struct Vehicle {
     id: usize,
     budget: f64,
+    start_node_id: usize,
+    end_node_id: usize,
 }
 
 #[derive(Serialize)]
@@ -44,10 +47,14 @@ struct Route {
 struct JsonSolution {
     instance_name: String,
     mode: String,
+    solver: Option<String>,
     elapsed_time_sec: f64,
     status: String,
     total_cost: f64,
     total_score: f64,
+    best_bound: Option<f64>,
+    gap: Option<f64>,
+    explored_nodes: Option<u64>,
     vehicles_used_ids: Vec<usize>,
     clusters_visited_ids: Vec<usize>,
     subgroups_visited_ids: Vec<usize>,
@@ -68,6 +75,10 @@ pub fn export_solution_to_json(solution: &Solution) -> Option<String> {
     let clusters_visited_ids = get_clusters_visited(solution);
     let subgroups_visited_ids = get_subgroups_visited(solution);
     let status = solution.status.clone().to_string();
+    let solver = solution.solver.clone();
+    let best_bound = solution.best_bound;
+    let gap = solution.gap;
+    let explored_nodes = solution.explored_nodes;
     let nodes = get_node(solution);
     let subgroups = get_subgroup(solution);
     let clusters = get_cluster(solution);
@@ -89,6 +100,10 @@ pub fn export_solution_to_json(solution: &Solution) -> Option<String> {
         clusters,
         vehicles,
         routes,
+        solver,
+        best_bound,
+        gap,
+        explored_nodes,
     };
 
     let path = format!(
@@ -129,6 +144,7 @@ fn get_node(solution: &Solution) -> Vec<Node> {
             x: n.point.x,
             y: n.point.y,
             z: n.point.z,
+            parent_subgroup_ids: n.parent_subgroup_ids.iter().copied().collect(),
         })
         .collect()
 }
@@ -166,6 +182,8 @@ fn get_vehicles(solution: &Solution) -> Vec<Vehicle> {
         .map(|v| Vehicle {
             id: v.id,
             budget: v.budget,
+            start_node_id: v.start_node_id,
+            end_node_id: v.end_node_id,
         })
         .collect()
 }

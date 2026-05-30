@@ -56,6 +56,10 @@ fn initialize_empty_solution(instance: &'_ Instance) -> (Solution<'_>, SearchSta
         total_cost: initial_total_cost,
         routes,
         status: SolutionStatus::Feasible,
+        solver: None,
+        best_bound: None,
+        gap: None,
+        explored_nodes: None,
     };
 
     (solution, state)
