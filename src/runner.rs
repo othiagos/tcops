@@ -21,7 +21,7 @@ pub fn run(args: Cli) -> Result<(), String> {
 
     printer::print_solution(&solution);
 
-    let path = io::export_solution_to_json(&solution);
+    let path = io::export_solution_to_json(&solution, &args);
 
     if let Some(path) = path {
         plot::show(&path, args.show, args.save);

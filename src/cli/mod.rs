@@ -44,6 +44,14 @@ pub struct Cli {
     /// Time limit for the exact solver gurobi in seconds (Only for mode=exact)
     #[arg(long)]
     pub time_limit: Option<u64>,
+
+    /// Folder to save the results
+    #[arg(long, default_value = "./result", value_hint = ValueHint::DirPath)]
+    pub folder_result: String,
+
+    /// Custom name for the result file (without extension) 
+    #[arg(long)]
+    pub custom_result_name: Option<String>
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug)]

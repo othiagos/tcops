@@ -1,9 +1,11 @@
 use std::collections::HashSet;
-use std::fs::File;
+use std::fs::{self, File};
 use std::io::BufWriter;
+use std::path::Path;
 
 use serde::Serialize;
 
+use crate::cli::Cli;
 use crate::common::instance::Metric;
 use crate::common::solution::Solution;
 
@@ -65,7 +67,7 @@ struct JsonSolution {
     routes: Vec<Route>,
 }
 
-pub fn export_solution_to_json(solution: &Solution) -> Option<String> {
+pub fn export_solution_to_json(solution: &Solution, args: &Cli) -> Option<String> {
     let instance_name = solution.instance.name.clone();
     let mode = get_mode(solution);
     let elapsed_time_sec = solution.duration.as_secs_f64();
@@ -106,10 +108,19 @@ pub fn export_solution_to_json(solution: &Solution) -> Option<String> {
         explored_nodes,
     };
 
-    let path = format!(
-        "{}/{}.json",
-        solution.instance.folder_path, solution.instance.name
-    );
+    let path = if let Some(name) = &args.custom_result_name {
+        format!("{}/{}.json", args.folder_result, name)
+    } else {
+        format!("{}/{}.json", args.folder_result, solution.instance.name)
+    };
+
+    if let Some(parent) = Path::new(&path).parent()
+        && !parent.exists()
+        && let Err(e) = fs::create_dir_all(parent)
+    {
+        eprintln!("Failed to create result folder: {}", e);
+        return None;
+    }
 
     let file = match File::create(&path) {
         Ok(f) => f,
@@ -189,10 +200,14 @@ fn get_vehicles(solution: &Solution) -> Vec<Vehicle> {
 }
 
 fn get_routes(solution: &Solution) -> Vec<Route> {
-    solution.routes.iter().map(|r| Route {
-        vehicle_id: r.vehicle_id,
-        path: r.path.clone(),
-    }).collect()
+    solution
+        .routes
+        .iter()
+        .map(|r| Route {
+            vehicle_id: r.vehicle_id,
+            path: r.path.clone(),
+        })
+        .collect()
 }
 
 fn get_vehicles_used(solution: &Solution) -> Vec<usize> {
