@@ -22,6 +22,7 @@ pub struct Cli {
     pub library: Option<LibraryType>,
 
     /// Mathematical solver type (Required if library=good-lp)
+    #[cfg(feature = "lib_good_lp")]
     #[arg(long, value_enum, required_if_eq("library", "good-lp"))]
     pub solver: Option<ExactSolverType>,
 
@@ -49,9 +50,9 @@ pub struct Cli {
     #[arg(long, default_value = "./result", value_hint = ValueHint::DirPath)]
     pub folder_result: String,
 
-    /// Custom name for the result file (without extension) 
+    /// Custom name for the result file (without extension)
     #[arg(long)]
-    pub custom_result_name: Option<String>
+    pub custom_result_name: Option<String>,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug)]
@@ -62,10 +63,12 @@ pub enum SolverMode {
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug)]
 pub enum LibraryType {
+    #[cfg(feature = "lib_good_lp")]
     GoodLp,
     Gurobi,
 }
 
+#[cfg(feature = "lib_good_lp")]
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug)]
 pub enum ExactSolverType {
     Gurobi,
