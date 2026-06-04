@@ -19,10 +19,13 @@ pub fn print_solution(solution: &Solution) {
     println!("Routes:");
 
     for route in &solution.routes {
+        let vehicle = &solution.instance.vehicles[route.vehicle_id];
         println!(
-            "Vehicle {:02}: Cost: {:>8.2}, Score: {:>4.2}, Path ({} nodes): {}",
+            "Vehicle {:02}: Cost: {:.2}/{:.2} ({:.1}%), Score: {:.2}, Path ({} nodes): {}",
             route.vehicle_id,
             route.cost,
+            vehicle.budget,
+            (route.cost / vehicle.budget * 1000.0).trunc() / 10.0,
             route.score,
             route.path.len(),
             format_path(&route.path)
