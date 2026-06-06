@@ -1,14 +1,29 @@
 use std::fmt;
 use std::time::Duration;
 
+use grb::Status;
+
 use crate::common::instance::Instance;
 
 #[derive(Debug, Clone, PartialEq, Default)]
 pub enum SolutionStatus {
     Optimal,
     Feasible,
+    TimeLimit,
+    IterationLimit,
     #[default]
     Unknown,
+}
+
+impl From<Status> for SolutionStatus {
+    fn from(status: Status) -> Self {
+        match status {
+            Status::Optimal => SolutionStatus::Optimal,
+            Status::TimeLimit => SolutionStatus::TimeLimit,
+            Status::IterationLimit => SolutionStatus::IterationLimit,
+            _ => SolutionStatus::Unknown,
+        }
+    }
 }
 
 impl fmt::Display for SolutionStatus {
@@ -16,6 +31,8 @@ impl fmt::Display for SolutionStatus {
         match self {
             SolutionStatus::Optimal => write!(f, "Optimal"),
             SolutionStatus::Feasible => write!(f, "Feasible"),
+            SolutionStatus::TimeLimit => write!(f, "Time Limit"),
+            SolutionStatus::IterationLimit => write!(f, "Iteration Limit"),
             SolutionStatus::Unknown => write!(f, "Unknown"),
         }
     }

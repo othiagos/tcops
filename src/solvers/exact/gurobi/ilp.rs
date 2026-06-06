@@ -90,7 +90,7 @@ impl<'a> Ilp<'a> {
 
         match status {
             Status::Optimal | Status::TimeLimit | Status::IterationLimit => {
-                self.handle_successful_solution(start_time)
+                self.handle_successful_solution(start_time, status)
             }
             _ => {
                 self.handle_failed_solution(status)
@@ -98,7 +98,7 @@ impl<'a> Ilp<'a> {
         }
     }
 
-    fn handle_successful_solution(&self, start_time: Instant) -> Result<Solution<'a>, SolverError> {
+    fn handle_successful_solution(&self, start_time: Instant, status: Status) -> Result<Solution<'a>, SolverError> {
         let metrics = SolverMetrics {
             best_bound: self.model.get_attr(attr::ObjBound).ok(),
             gap: self.model.get_attr(attr::MIPGap).ok(),
@@ -111,6 +111,7 @@ impl<'a> Ilp<'a> {
             self.instance,
             start_time.elapsed(),
             metrics,
+            status,
         )
         .map_err(|e| {
             SolverError::new(

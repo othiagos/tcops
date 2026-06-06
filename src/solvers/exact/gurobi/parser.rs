@@ -4,7 +4,7 @@ use grb::prelude::*;
 
 use crate::common::{
     instance::Instance,
-    solution::{Route, Solution, SolutionStatus, SolverMetrics},
+    solution::{Route, Solution, SolverMetrics},
 };
 
 use crate::solvers::exact::gurobi::variable::DecisionVariables;
@@ -15,6 +15,7 @@ pub fn parse_solution<'a>(
     instance: &'a Instance,
     duration: Duration,
     metrics: SolverMetrics,
+    status: Status
 ) -> grb::Result<Solution<'a>> {
     let mut routes: Vec<Route> = Vec::new();
 
@@ -33,7 +34,7 @@ pub fn parse_solution<'a>(
         total_score,
         total_cost,
         routes,
-        status: SolutionStatus::Optimal,
+        status: status.into(),
         solver: Some("Gurobi".to_string()),
         best_bound: metrics.best_bound,
         gap: metrics.gap,
