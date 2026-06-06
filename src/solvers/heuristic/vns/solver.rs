@@ -1,3 +1,4 @@
+use std::io::{Write, stdout};
 use std::time::Instant;
 
 use rand::thread_rng;
@@ -31,6 +32,11 @@ pub fn solve<'a>(
 
     while iter_without_improvement < max_iterations_without_improvement {
         iter_without_improvement += 1;
+        print!(
+            "\x1B[2KIterations without improvement: {}/{}\r",
+            iter_without_improvement, max_iterations_without_improvement
+        );
+        let _ = stdout().flush();
 
         let max_shaking_limit = max_shaking_intensity.min(instance.subgroups.len());
         for shaking_intensity in 0..=max_shaking_limit {
@@ -69,6 +75,7 @@ pub fn solve<'a>(
     }
 
     best_solution.duration = start_time.elapsed();
+    print!("\x1B[2K");
 
     Ok(best_solution)
 }
