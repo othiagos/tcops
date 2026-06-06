@@ -36,12 +36,12 @@ pub fn print_solution(solution: &Solution) {
 fn format_path(path: &[usize]) -> String {
     let len = path.len();
 
-    if len <= 12 {
+    if len <= 7 {
         return format!("{:?}", path);
     }
 
-    let first: Vec<String> = path[..5].iter().map(|n| format!("{:?}", n)).collect();
-    let last: Vec<String> = path[len - 5..].iter().map(|n| format!("{:?}", n)).collect();
+    let first: Vec<String> = path[..3].iter().map(|n| format!("{:?}", n)).collect();
+    let last: Vec<String> = path[len - 3..].iter().map(|n| format!("{:?}", n)).collect();
 
     format!("[{}, ..., {}]", first.join(", "), last.join(", "))
 }
