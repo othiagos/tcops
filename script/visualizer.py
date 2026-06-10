@@ -156,7 +156,7 @@ class Visualizer:
                            label='Depot' if not label_added else "")
                 label_added = True
 
-        ax.set_aspect('equal', adjustable='box')
+        ax.set_aspect('auto')
         
         if self.grid_style:
             ax.grid(True, linestyle=self.grid_style, alpha=0.6)
