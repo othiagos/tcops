@@ -53,6 +53,10 @@ pub struct Cli {
     /// Custom name for the result file (without extension)
     #[arg(long)]
     pub custom_result_name: Option<String>,
+
+    /// Gurobi parameters file (Only for mode=exact and library=gurobi)
+    #[arg(long, value_name = "PARAM=VALUE")]
+    pub gurobi_params: Option<String>,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug)]

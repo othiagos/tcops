@@ -59,12 +59,15 @@ impl<'a> Ilp<'a> {
     }
 
     fn configure_solver(&mut self, args: &Cli) -> Result<(), SolverError> {
+        self.model.set_param(param::LazyConstraints, 1)?;
+        
         if let Some(limit) = args.time_limit {
             self.model.set_param(param::TimeLimit, limit as f64)?;
         }
 
-        self.model.set_param(param::LazyConstraints, 1)?;
-        self.model.get_env_mut().read_params("gurobi.prm")?;
+        if let Some(file) = &args.gurobi_params {
+            self.model.get_env_mut().read_params(file)?;
+        } 
 
         Ok(())
     }
