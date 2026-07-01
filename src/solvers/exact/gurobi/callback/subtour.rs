@@ -36,8 +36,8 @@ impl<'a> SubtourCallback<'a> {
         let w_cuts = utils::filter_orthogonal_cuts(all_cuts);
 
         let num_nodes = self.instance.nodes.len();
-        for (k, tour, _) in w_cuts {
-            io::apply_fractional_cuts(k, vec![tour], ctx, self.variables, num_nodes)?;
+        for (k, tour, _, src) in w_cuts {
+            io::apply_fractional_cuts(k, vec![(tour, src)], ctx, self.variables, num_nodes)?;
         }
 
         Ok(())
@@ -58,8 +58,8 @@ impl<'a> SubtourCallback<'a> {
                 &y_vals,
             );
             
-            for (tour, violation) in bad_tours {
-                all_cuts.push((k, tour, violation));
+            for (tour, violation, src) in bad_tours {
+                all_cuts.push((k, tour, violation, src));
             }
         }
 

@@ -1,6 +1,6 @@
 use crate::common::constants::LAMBDA;
 
-pub type CutTuple = (usize, Vec<usize>, f64);
+pub type CutTuple = (usize, Vec<usize>, f64, usize);
 
 pub fn jaccard_similarity(s1: &[usize], s2: &[usize]) -> f64 {
     let mut i = 0;

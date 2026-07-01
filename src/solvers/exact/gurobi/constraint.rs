@@ -55,6 +55,37 @@ pub fn flow_conservation(
     Ok(())
 }
 
+pub fn logical_visit(
+    model: &mut Model,
+    variable: &DecisionVariables,
+    instance: &Instance,
+) -> grb::Result<()> {
+    let num_nodes = instance.nodes.len();
+
+    for k in 0..instance.vehicles.len() {
+        let start_node = instance.vehicles[k].start_node_id;
+        let end_node = instance.vehicles[k].end_node_id;
+
+        let vehicle_used: grb::Expr = (0..num_nodes)
+            .filter(|&j| j != start_node)
+            .map(|j| variable.x[k][start_node][j])
+            .sum();
+
+        for i in 0..num_nodes {
+            if i == start_node || i == end_node {
+                continue;
+            }
+            
+            model.add_constr(
+                &format!("logical_visit_v{}_n{}", k, i),
+                c!(variable.y[k][i] <= vehicle_used.clone())
+            )?;
+        }
+    }
+
+    Ok(())
+}
+
 pub fn unique_visit(
     model: &mut Model,
     variable: &DecisionVariables,

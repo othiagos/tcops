@@ -73,17 +73,18 @@ impl<'a> Ilp<'a> {
     }
 
     fn build_model(&mut self) -> Result<(), SolverError> {
-        let m = &mut self.model;
-        let v = &self.variables;
-        let i = self.instance;
+        let model = &mut self.model;
+        let variable = &self.variables;
+        let instance = self.instance;
 
-        constraint::flow_conservation(m, v, i)?;
-        constraint::unique_visit(m, v, i)?;
-        constraint::logical_physical(m, v, i)?;
-        constraint::cluster(m, v, i)?;
-        constraint::budget(m, v, i)?;
+        constraint::flow_conservation(model, variable, instance)?;
+        constraint::unique_visit(model, variable, instance)?;
+        constraint::logical_physical(model, variable, instance)?;
+        constraint::cluster(model, variable, instance)?;
+        constraint::budget(model, variable, instance)?;
+        constraint::logical_visit(model, variable, instance)?;
 
-        objective::set_objective(m, v, i)?;
+        objective::set_objective(model, variable, instance)?;
 
         Ok(())
     }

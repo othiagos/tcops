@@ -49,19 +49,19 @@ pub fn get_active_edges(
 
 pub fn apply_fractional_cuts(
     k: usize,
-    bad_tours: Vec<Vec<usize>>,
+    bad_tours: Vec<(Vec<usize>, usize)>,
     ctx: &mut MIPNodeCtx,
     variables: &DecisionVariables,
     num_nodes: usize,
 ) -> Result<(), anyhow::Error> {
-    for tour in bad_tours {
+    for (tour, src) in bad_tours {
         let subset_barr: Vec<usize> = (0..num_nodes).filter(|n| !tour.contains(n)).collect();
         let cut_expr: grb::Expr = tour
             .iter()
             .flat_map(|&i| subset_barr.iter().map(move |&j| variables.x[k][i][j]))
             .sum();
 
-        let y_trigger = variables.y[k][tour[0]];
+        let y_trigger = variables.y[k][src];
         ctx.add_cut(c!(cut_expr >= y_trigger))?;
     }
 
@@ -76,15 +76,24 @@ pub fn apply_cut_set_constraints(
     num_nodes: usize,
 ) -> Result<(), anyhow::Error> {
     for tour in bad_tours {
+        let dfj_expr: grb::Expr = tour.iter()
+            .flat_map(|&i| tour.iter().filter(move |&&j| i != j)
+            .map(move |&j| variables.x[k][i][j]))
+            .sum();
+
+        let max_edges = (tour.len() - 1) as f64;
+        ctx.add_lazy(c!(dfj_expr <= max_edges))?;
+
         let subset_barr: Vec<usize> = (0..num_nodes).filter(|n| !tour.contains(n)).collect();
         let cut_expr: grb::Expr = tour
             .iter()
             .flat_map(|&i| subset_barr.iter().map(move |&j| variables.x[k][i][j]))
             .sum();
 
-        let y_trigger = variables.y[k][tour[0]];
-        ctx.add_lazy(c!(cut_expr >= y_trigger))?;
+        for &v in &tour {
+            let y_trigger = variables.y[k][v];
+            ctx.add_lazy(c!(cut_expr.clone() >= y_trigger))?;
+        }
     }
-
     Ok(())
 }

@@ -6,7 +6,7 @@ pub fn find_fractional_subtours(
     end_node: usize,
     edges: &[(usize, usize, f64)],
     y_vals: &[f64],
-) -> Vec<(Vec<usize>, f64)> {
+) -> Vec<(Vec<usize>, f64, usize)> {
     let mut old_to_new = vec![usize::MAX; num_nodes];
     let mut new_to_old = Vec::new();
 
@@ -75,7 +75,7 @@ pub fn find_fractional_subtours(
             component.sort_unstable();
 
             let violation = y_val;
-            all_bad_tours.push((component, violation));
+            all_bad_tours.push((component, violation, src));
 
             continue;
         }
@@ -87,7 +87,7 @@ pub fn find_fractional_subtours(
         if violation > 1e-4 && !min_cut.contains(&0) {
             let mut component: Vec<usize> = min_cut.into_iter().map(|i| new_to_old[i]).collect();
             component.sort_unstable();
-            all_bad_tours.push((component, violation));
+            all_bad_tours.push((component, violation, src));
         }
     }
 
