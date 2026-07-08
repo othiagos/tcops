@@ -20,11 +20,11 @@ EXACT_INSTANCES = [
     "burma14", "ulysses16", "ulysses22", "att48", "eil51", "berlin52", 
     "st70", "eil76", "pr76", "gr96", "rat99", "kroA100", "rd100", 
     "eil101", "lin105", "pr124", "bier127", "ch130", "pr136", "pr144", 
-    "ch150", "kroA150", "pr152", "u159", "rat195", "d198", "kroA200", "gr202"
+    "ch150", "kroA150", "pr152", "u159", "rat195", "d198", "kroA200", "gr202", "ts225"
 ]
 
 HEURISTIC_SMALL = [
-    "ts225", "gil262", "a280", "lin318", "rd400", "pcb442", "d493", 
+    "gil262", "a280", "lin318", "rd400", "pcb442", "d493", 
     "att532", "u574", "p654", "d657", "u724", "rat783", "dsj1000"
 ]
 
@@ -134,23 +134,30 @@ def generate_instances():
         
         node_lines = []
         node_lines.append("EDGE_WEIGHT_TYPE: EUC_2D")
-        node_lines.append("NODE_COORD_SECTION: id profit x y")
-        node_lines.append(f"0 0.0 {depot[1]:.2f} {depot[2]:.2f}")
+        node_lines.append("NODE_COORD_SECTION: id x y")
+        node_lines.append(f"0 {depot[1]:.2f} {depot[2]:.2f}")
         
         subgroup_nodes = {i: [] for i in range(num_subgroups)}
+        subgroup_profits = {i: 0.0 for i in range(num_subgroups)}
+        
         for idx, (orig_id, x, y) in enumerate(customers):
             new_id = idx + 1
             p_j = 1.0 + ((7141 * new_id + 73) % 100)
-            node_lines.append(f"{new_id} {p_j:.1f} {x:.2f} {y:.2f}")
+            
+            node_lines.append(f"{new_id} {x:.2f} {y:.2f}")
+            
             sg_id = sg_labels[idx]
             subgroup_nodes[sg_id].append(new_id)
+            subgroup_profits[sg_id] += p_j
             
         sg_lines = []
-        sg_lines.append("SUBGROUP_SECTION: subgroup_id id-vertex-list")
-        sg_lines.append("0 0")
+        sg_lines.append("SUBGROUP_SECTION: subgroup_id profit id-vertex-list")
+        sg_lines.append("0 0.0 0")
+        
         for sg_id in range(num_subgroups):
             nodes_str = " ".join(map(str, subgroup_nodes[sg_id]))
-            sg_lines.append(f"{sg_id + 1} {nodes_str}")
+            sg_profit = subgroup_profits[sg_id]
+            sg_lines.append(f"{sg_id + 1} {sg_profit:.1f} {nodes_str}")
             
         cl_lines = []
         cl_lines.append("CLUSTER_SECTION: cluster_id id-subgroup-list")

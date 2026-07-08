@@ -26,11 +26,11 @@ EXACT_INSTANCES = [
     "burma14", "ulysses16", "ulysses22", "att48", "eil51", "berlin52", 
     "st70", "eil76", "pr76", "gr96", "rat99", "kroA100", "rd100", 
     "eil101", "lin105", "pr124", "bier127", "ch130", "pr136", "pr144", 
-    "ch150", "kroA150", "pr152", "u159", "rat195", "d198", "kroA200", "gr202"
+    "ch150", "kroA150", "pr152", "u159", "rat195", "d198", "kroA200", "gr202", "ts225"
 ]
 
 HEURISTIC_SMALL_INSTANCES = [
-    "ts225", "gil262", "a280", "lin318", "rd400", "pcb442", "d493", 
+    "gil262", "a280", "lin318", "rd400", "pcb442", "d493", 
     "att532", "u574", "p654", "d657", "u724", "rat783", "dsj1000"
 ]
 

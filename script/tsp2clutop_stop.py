@@ -21,7 +21,7 @@ INSTANCES = [
     "burma14", "ulysses16", "ulysses22", "att48", "eil51", "berlin52", 
     "st70", "eil76", "pr76", "gr96", "rat99", "kroA100", "rd100", 
     "eil101", "lin105", "pr124", "bier127", "ch130", "pr136", "pr144", 
-    "ch150", "kroA150", "pr152", "u159", "rat195", "d198", "kroA200", "gr202"
+    "ch150", "kroA150", "pr152", "u159", "rat195", "d198", "kroA200", "gr202", "ts225"
 ]
 
 def load_solutions(filepath):
@@ -57,6 +57,9 @@ def parse_tsp(filepath):
     return nodes
 
 def generate_file(output_path, base_name, problem_type, nodes, depot, sg_mapping, cl_mapping, budget):
+    if os.path.exists(output_path) and not OVERWRITE:
+        return
+
     num_subgroups = len(sg_mapping)
     num_clusters = len(cl_mapping)
     
@@ -70,18 +73,24 @@ def generate_file(output_path, base_name, problem_type, nodes, depot, sg_mapping
     lines.append(f"VEHICLES: {VEHICLES}")
     lines.append("EDGE_WEIGHT_TYPE: EUC_2D")
     
-    lines.append("NODE_COORD_SECTION: id profit x y")
-    lines.append(f"0 0.0 {depot[1]:.2f} {depot[2]:.2f}")
+    lines.append("NODE_COORD_SECTION: id x y")
+    lines.append(f"0 {depot[1]:.2f} {depot[2]:.2f}")
+    
+    node_profits = {}
+    
     for idx, (orig_id, x, y) in enumerate(nodes):
         new_id = idx + 1
         p_j = 1.0 + ((7141 * new_id + 73) % 100) 
-        lines.append(f"{new_id} {p_j:.1f} {x:.2f} {y:.2f}")
+        node_profits[new_id] = p_j
+        lines.append(f"{new_id} {x:.2f} {y:.2f}")
         
-    lines.append("SUBGROUP_SECTION: subgroup_id id-vertex-list")
-    lines.append("0 0")
+    lines.append("SUBGROUP_SECTION: subgroup_id profit id-vertex-list")
+    lines.append("0 0.0 0")
+    
     for sg_id, node_list in sg_mapping.items():
         nodes_str = " ".join(map(str, node_list))
-        lines.append(f"{sg_id} {nodes_str}")
+        sg_profit = sum(node_profits[nid] for nid in node_list)
+        lines.append(f"{sg_id} {sg_profit:.1f} {nodes_str}")
         
     lines.append("CLUSTER_SECTION: cluster_id id-subgroup-list")
     lines.append("0 0")
