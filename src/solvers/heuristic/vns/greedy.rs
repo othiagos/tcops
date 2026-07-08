@@ -44,7 +44,6 @@ fn initialize_empty_solution(instance: &'_ Instance) -> (Solution<'_>, SearchSta
         routes.push(Route {
             path: vec![start, end],
             cost: base_cost,
-            score: 0.0,
             vehicle_id: vehicle.id,
         });
     }

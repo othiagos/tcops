@@ -5,7 +5,7 @@ use std::collections::HashSet;
 use std::fs::File;
 use std::io::{BufReader, Error, ErrorKind};
 
-const NODE_DATA_MIN_PARTS: usize = 4;
+const NODE_DATA_MIN_PARTS: usize = 3;
 
 pub fn process(
     tracker: &mut LineTracker<BufReader<File>>,
@@ -23,14 +23,12 @@ fn parse(parts: Vec<&str>) -> Result<Node, Error> {
     }
 
     let id = parse_integer(parts[0])?;
-    let profit = parse_float(parts[1])?;
-    let x = parse_float(parts[2])?;
-    let y = parse_float(parts[3])?;
-    let z = parse_float(parts.get(4).unwrap_or(&"0.0"))?;
+    let x = parse_float(parts[1])?;
+    let y = parse_float(parts[2])?;
+    let z = parse_float(parts.get(3).unwrap_or(&"0.0"))?;
 
     Ok(Node {
         id,
-        profit,
         point: Point3 { x, y, z },
         parent_subgroup_ids: HashSet::new(),
     })

@@ -38,7 +38,6 @@ pub fn evaluate_subgroup_insertion<'a>(
                 trial_sol.routes[spot.vehicle_id].cost += spot.cost_delta;
                 trial_sol.total_cost += spot.cost_delta;
                 trial_state.visited_nodes.insert(node_id);
-                trial_sol.routes[spot.vehicle_id].score += instance.nodes[node_id].profit;
             }
             None => return None,
         }
@@ -143,7 +142,6 @@ fn remove_node_from_routes(
             route.cost += delta;
             solution.total_cost += delta;
             state.visited_nodes.remove(&node_id);
-            route.score -= instance.nodes[node_id].profit;
 
             break;
         }

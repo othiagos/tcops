@@ -43,7 +43,6 @@ pub struct Route {
     pub vehicle_id: usize,
     pub path: Vec<usize>,
     pub cost: f64,
-    pub score: f64,
 }
 
 #[derive(Debug, Clone)]

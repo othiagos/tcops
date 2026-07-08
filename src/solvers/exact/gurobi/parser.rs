@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{collections::HashSet, time::Duration};
 
 use grb::prelude::*;
 
@@ -25,7 +25,17 @@ pub fn parse_solution<'a>(
         }
     }
 
-    let total_score: f64 = routes.iter().map(|r| r.score).sum();
+    let visited_nodes: HashSet<usize> = routes
+        .iter()
+        .flat_map(|r| r.path.iter().copied())
+        .collect();
+
+    let total_score: f64 = instance.subgroups
+        .iter()
+        .filter(|sg| sg.node_ids.iter().all(|node_id| visited_nodes.contains(node_id)))
+        .map(|sg| sg.profit)
+        .sum();
+
     let total_cost: f64 = routes.iter().map(|r| r.cost).sum();
 
     Ok(Solution {
@@ -55,21 +65,17 @@ fn get_route(
     }
 
     let mut route_cost = 0.0;
-    let mut route_score = 0.0;
 
     for i in 0..current_route_nodes.len() - 1 {
         let current_id = current_route_nodes[i];
-
-        route_score += instance.nodes[current_id].profit;
-
         let next_id = current_route_nodes[i + 1];
+
         route_cost += instance.get_distance(current_id, next_id);
     }
 
     let route = Route {
         path: current_route_nodes,
         cost: route_cost,
-        score: route_score,
         vehicle_id: k,
     };
 

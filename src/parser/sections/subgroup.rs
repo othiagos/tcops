@@ -1,6 +1,6 @@
 use crate::common::instance::{Node, Subgroup};
 use crate::parser::sections::common::handle_section;
-use crate::parser::utils::{LineTracker, parse_integer};
+use crate::parser::utils::{LineTracker, parse_integer, parse_float};
 use crate::parser::validator::validate_item_id;
 use std::fs::File;
 use std::io::{BufReader, Error, ErrorKind};
@@ -26,15 +26,14 @@ fn parse(parts: Vec<&str>, nodes: &[Node]) -> Result<Subgroup, Error> {
     }
 
     let id = parse_integer(parts[0])?;
+    let profit = parse_float(parts[1])?;
     let mut node_ids = Vec::new();
-    for part in &parts[1..] {
+    for part in &parts[2..] {
         let node_id = parse_integer(part)?;
 
         validate_item_id("Node", nodes, node_id)?;
         node_ids.push(node_id);
     }
-
-    let profit = node_ids.iter().map(|&node_id| nodes[node_id].profit).sum();
 
     Ok(Subgroup {
         id,

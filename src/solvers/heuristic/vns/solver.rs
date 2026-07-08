@@ -68,7 +68,6 @@ pub fn solve<'a>(
         if route.path.len() == 2 {
             route.path.truncate(1);
             route.cost = 0.0;
-            route.score = 0.0;
         }
 
         best_solution.total_cost += route.cost;

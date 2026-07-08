@@ -53,7 +53,6 @@ impl Point3 {
 #[derive(Debug, Clone, Default)]
 pub struct Node {
     pub id: usize,
-    pub profit: f64,
     pub point: Point3,
     pub parent_subgroup_ids: HashSet<usize>,
 }
