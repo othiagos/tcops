@@ -56,9 +56,10 @@ pub fn apply_fractional_cuts(
 ) -> Result<(), anyhow::Error> {
     for (tour, src) in bad_tours {
         let subset_barr: Vec<usize> = (0..num_nodes).filter(|n| !tour.contains(n)).collect();
-        let cut_expr: grb::Expr = tour
+
+        let cut_expr: grb::Expr = subset_barr
             .iter()
-            .flat_map(|&i| subset_barr.iter().map(move |&j| variables.x[k][i][j]))
+            .flat_map(|&u| tour.iter().map(move |&v| variables.x[k][u][v]))
             .sum();
 
         let y_trigger = variables.y[k][src];
@@ -85,9 +86,9 @@ pub fn apply_cut_set_constraints(
         ctx.add_lazy(c!(dfj_expr <= max_edges))?;
 
         let subset_barr: Vec<usize> = (0..num_nodes).filter(|n| !tour.contains(n)).collect();
-        let cut_expr: grb::Expr = tour
+        let cut_expr: grb::Expr = subset_barr
             .iter()
-            .flat_map(|&i| subset_barr.iter().map(move |&j| variables.x[k][i][j]))
+            .flat_map(|&u| tour.iter().map(move |&v| variables.x[k][u][v]))
             .sum();
 
         for &v in &tour {

@@ -1,17 +1,17 @@
+use super::max_flow::{Edge, max_flow_min_cut};
 use std::collections::VecDeque;
-use super::max_flow::{max_flow_min_cut, Edge};
 
 pub fn find_fractional_subtours(
     num_nodes: usize,
-    end_node: usize,
+    start_node: usize,
     edges: &[(usize, usize, f64)],
     y_vals: &[f64],
 ) -> Vec<(Vec<usize>, f64, usize)> {
     let mut old_to_new = vec![usize::MAX; num_nodes];
     let mut new_to_old = Vec::new();
 
-    old_to_new[end_node] = 0;
-    new_to_old.push(end_node);
+    old_to_new[start_node] = 0;
+    new_to_old.push(start_node);
 
     for &(u, v, _) in edges {
         if old_to_new[u] == usize::MAX {
@@ -32,20 +32,31 @@ pub fn find_fractional_subtours(
         let nv = old_to_new[v];
         let rev_u = adj[nv].len();
         let rev_v = adj[nu].len();
-        adj[nu].push(Edge { to: nv, cap, rev_idx: rev_u });
-        adj[nv].push(Edge { to: nu, cap: 0.0, rev_idx: rev_v });
+
+        adj[nu].push(Edge {
+            to: nv,
+            cap,
+            rev_idx: rev_u,
+        });
+        
+        adj[nv].push(Edge {
+            to: nu,
+            cap: 0.0,
+            rev_idx: rev_v,
+        });
     }
 
     let candidates: Vec<(usize, f64)> = y_vals
         .iter()
         .enumerate()
-        .filter(|&(i, &y_val)| i != end_node && y_val > 1e-4 && old_to_new[i] != usize::MAX)
+        .filter(|&(i, &y_val)| i != start_node && y_val > 1e-4 && old_to_new[i] != usize::MAX)
         .map(|(i, &y_val)| (old_to_new[i], y_val))
         .collect();
 
     let mut all_bad_tours = Vec::new();
+    let src = 0;
 
-    for (src, y_val) in candidates {
+    for (sink, y_val) in candidates {
         let mut visited = vec![false; num_active];
         let mut queue = VecDeque::new();
         queue.push_back(src);
@@ -53,9 +64,8 @@ pub fn find_fractional_subtours(
         let mut reaches_sink = false;
 
         while let Some(u) = queue.pop_front() {
-            if u == 0 {
+            if u == sink {
                 reaches_sink = true;
-                break;
             }
 
             for edge in &adj[u] {
@@ -67,27 +77,28 @@ pub fn find_fractional_subtours(
         }
 
         if !reaches_sink {
+            let violation = y_val; // A violação é total (o fluxo é 0)
             let mut component: Vec<usize> = (0..num_active)
-                .filter(|&i| visited[i])
+                .filter(|&i| !visited[i])
                 .map(|i| new_to_old[i])
                 .collect();
 
             component.sort_unstable();
-
-            let violation = y_val;
-            all_bad_tours.push((component, violation, src));
+            let sink_orig = new_to_old[sink];
+            all_bad_tours.push((component, violation, sink_orig));
 
             continue;
         }
 
         let mut adj_run = adj.clone();
-        let (max_flow, min_cut) = max_flow_min_cut(num_active, &mut adj_run, src, 0);
+        let (max_flow, min_cut) = max_flow_min_cut(num_active, &mut adj_run, src, sink);
 
         let violation = y_val - max_flow;
-        if violation > 1e-4 && !min_cut.contains(&0) {
+        if violation > 1e-4 {
             let mut component: Vec<usize> = min_cut.into_iter().map(|i| new_to_old[i]).collect();
             component.sort_unstable();
-            all_bad_tours.push((component, violation, src));
+            let sink_orig = new_to_old[sink];
+            all_bad_tours.push((component, violation, sink_orig));
         }
     }
 

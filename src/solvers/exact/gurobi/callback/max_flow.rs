@@ -71,6 +71,7 @@ pub fn max_flow_min_cut(
         }
     }
 
-    let min_cut_component: Vec<usize> = (0..num_active_nodes).filter(|&i| visited[i]).collect();
-    (max_flow, min_cut_component)
+    let isolated_island: Vec<usize> = (0..num_active_nodes).filter(|&i| !visited[i]).collect();
+
+    (max_flow, isolated_island)
 }

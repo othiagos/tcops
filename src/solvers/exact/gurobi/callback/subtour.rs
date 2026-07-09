@@ -36,6 +36,7 @@ impl<'a> SubtourCallback<'a> {
         let w_cuts = utils::filter_orthogonal_cuts(all_cuts);
 
         let num_nodes = self.instance.nodes.len();
+        
         for (k, tour, _, src) in w_cuts {
             io::apply_fractional_cuts(k, vec![(tour, src)], ctx, self.variables, num_nodes)?;
         }
@@ -53,7 +54,7 @@ impl<'a> SubtourCallback<'a> {
             
             let bad_tours = separation::find_fractional_subtours(
                 num_nodes,
-                self.instance.vehicles[k].end_node_id,
+                self.instance.vehicles[k].start_node_id, 
                 &frac_edges,
                 &y_vals,
             );
