@@ -147,3 +147,144 @@ fn remove_node_from_routes(
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::time::Duration;
+    use crate::common::instance::{Cluster, Metric, Node, Point3, Subgroup, Vehicle};
+    use crate::common::solution::{Route, SolutionStatus};
+
+    fn helper_create_test_instance() -> Instance {
+        Instance {
+            name: "test_inst".to_string(),
+            metric: Metric::Euc2d,
+            nodes: vec![
+                Node { id: 0, point: Point3 { x: 0.0, y: 0.0, z: 0.0 }, ..Default::default() },
+                Node { id: 1, point: Point3 { x: 0.0, y: 3.0, z: 0.0 }, ..Default::default() },
+                Node { id: 2, point: Point3 { x: 4.0, y: 0.0, z: 0.0 }, ..Default::default() },
+                Node { id: 3, point: Point3 { x: 100.0, y: 100.0, z: 0.0 }, ..Default::default() },
+            ],
+            subgroups: vec![
+                Subgroup { id: 0, profit: 10.0, node_ids: vec![1], parent_cluster_id: 0 },
+                Subgroup { id: 1, profit: 20.0, node_ids: vec![2], parent_cluster_id: 0 },
+                Subgroup { id: 2, profit: 30.0, node_ids: vec![3], parent_cluster_id: 1 },
+                Subgroup { id: 3, profit: 40.0, node_ids: vec![0], parent_cluster_id: 2 }, // Depot node inside subgroup
+            ],
+            clusters: vec![
+                Cluster { id: 0, subgroup_ids: vec![0, 1] },
+                Cluster { id: 1, subgroup_ids: vec![2] },
+                Cluster { id: 2, subgroup_ids: vec![3] },
+            ],
+            vehicles: vec![
+                Vehicle { id: 0, budget: 20.0, start_node_id: 0, end_node_id: 0 },
+            ],
+            ..Default::default()
+        }
+    }
+
+    fn helper_create_initial_solution<'a>(instance: &'a Instance) -> (Solution<'a>, SearchState) {
+        let route = Route {
+            vehicle_id: 0,
+            path: vec![0, 0],
+            cost: 0.0,
+        };
+        let mut state = SearchState::default();
+        state.visited_nodes.insert(0);
+
+        let solution = Solution {
+            instance,
+            duration: Duration::from_secs(0),
+            total_score: 0.0,
+            total_cost: 0.0,
+            routes: vec![route],
+            status: SolutionStatus::Feasible,
+            solver: None,
+            best_bound: None,
+            gap: None,
+            explored_nodes: None,
+        };
+
+        (solution, state)
+    }
+
+    #[test]
+    fn test_evaluate_subgroup_insertion_success() {
+        let instance = helper_create_test_instance();
+        let (solution, state) = helper_create_initial_solution(&instance);
+
+        let res = evaluate_subgroup_insertion(&instance, &solution, &state, 0);
+        assert!(res.is_some());
+        let (trial_sol, trial_state) = res.unwrap();
+
+        assert_eq!(trial_sol.total_score, 10.0);
+        assert_eq!(trial_sol.routes[0].path, vec![0, 1, 0]);
+        assert_eq!(trial_sol.total_cost, 6.0); // (0,0)->(0,3)->(0,0) = 3 + 3 = 6
+        assert!(trial_state.visited_nodes.contains(&1));
+        assert_eq!(trial_state.cluster_locks.get(&0), Some(&0));
+        assert_eq!(trial_state.subgroup_nodes_count.get(&0), Some(&1));
+    }
+
+    #[test]
+    fn test_evaluate_subgroup_insertion_cluster_locked() {
+        let instance = helper_create_test_instance();
+        let (solution, mut state) = helper_create_initial_solution(&instance);
+
+        // Lock Cluster 0 to Subgroup 0
+        state.cluster_locks.insert(0, 0);
+
+        // Try inserting Subgroup 1 which also belongs to Cluster 0 -> should fail
+        let res = evaluate_subgroup_insertion(&instance, &solution, &state, 1);
+        assert!(res.is_none());
+    }
+
+    #[test]
+    fn test_evaluate_subgroup_insertion_budget_exceeded() {
+        let instance = helper_create_test_instance();
+        let (solution, state) = helper_create_initial_solution(&instance);
+
+        // Subgroup 2 contains node 3 at (100,100), distance ~282 > budget 20 -> fail
+        let res = evaluate_subgroup_insertion(&instance, &solution, &state, 2);
+        assert!(res.is_none());
+    }
+
+    #[test]
+    fn test_evaluate_subgroup_insertion_depot_node_fail() {
+        let instance = helper_create_test_instance();
+        let (solution, state) = helper_create_initial_solution(&instance);
+
+        // Subgroup 3 contains node 0 (start/end depot node) -> fail
+        let res = evaluate_subgroup_insertion(&instance, &solution, &state, 3);
+        assert!(res.is_none());
+    }
+
+    #[test]
+    fn test_drop_subgroup() {
+        let instance = helper_create_test_instance();
+        let (solution, state) = helper_create_initial_solution(&instance);
+
+        let (mut trial_sol, mut trial_state) = evaluate_subgroup_insertion(&instance, &solution, &state, 0).unwrap();
+        assert_eq!(trial_sol.total_score, 10.0);
+        assert_eq!(trial_sol.routes[0].path, vec![0, 1, 0]);
+
+        drop_subgroup(&instance, &mut trial_sol, &mut trial_state, 0);
+
+        assert_eq!(trial_sol.total_score, 0.0);
+        assert_eq!(trial_sol.total_cost, 0.0);
+        assert_eq!(trial_sol.routes[0].path, vec![0, 0]);
+        assert!(!trial_state.visited_nodes.contains(&1));
+        assert!(!trial_state.cluster_locks.contains_key(&0));
+        assert!(!trial_state.subgroup_nodes_count.contains_key(&0));
+    }
+
+    #[test]
+    fn test_remove_depot_node_from_routes_does_nothing() {
+        let instance = helper_create_test_instance();
+        let (mut solution, mut state) = helper_create_initial_solution(&instance);
+
+        let initial_path = solution.routes[0].path.clone();
+        remove_node_from_routes(&instance, &mut solution, &mut state, 0);
+
+        assert_eq!(solution.routes[0].path, initial_path);
+    }
+}

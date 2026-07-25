@@ -104,3 +104,72 @@ fn find_best_subgroup_insertion<'a>(
 
     best_trial
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashSet;
+    use crate::common::instance::{Cluster, Metric, Node, Point3, Subgroup, Vehicle};
+
+    fn create_test_instance() -> Instance {
+        Instance {
+            name: "greedy_test".to_string(),
+            metric: Metric::Euc2d,
+            nodes: vec![
+                Node {
+                    id: 0,
+                    point: Point3 { x: 0.0, y: 0.0, z: 0.0 },
+                    parent_subgroup_ids: HashSet::from([0]),
+                },
+                Node {
+                    id: 1,
+                    point: Point3 { x: 0.0, y: 3.0, z: 0.0 },
+                    parent_subgroup_ids: HashSet::from([1]),
+                },
+                Node {
+                    id: 2,
+                    point: Point3 { x: 4.0, y: 0.0, z: 0.0 },
+                    parent_subgroup_ids: HashSet::from([2]),
+                },
+            ],
+            subgroups: vec![
+                Subgroup { id: 0, profit: 5.0, node_ids: vec![0], parent_cluster_id: 0 },
+                Subgroup { id: 1, profit: 50.0, node_ids: vec![1], parent_cluster_id: 1 },
+                Subgroup { id: 2, profit: 20.0, node_ids: vec![2], parent_cluster_id: 2 },
+            ],
+            clusters: vec![
+                Cluster { id: 0, subgroup_ids: vec![0] },
+                Cluster { id: 1, subgroup_ids: vec![1] },
+                Cluster { id: 2, subgroup_ids: vec![2] },
+            ],
+            vehicles: vec![
+                Vehicle { id: 0, budget: 30.0, start_node_id: 0, end_node_id: 0 },
+            ],
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn test_initialize_empty_solution() {
+        let instance = create_test_instance();
+        let (solution, state) = initialize_empty_solution(&instance);
+
+        assert_eq!(solution.routes.len(), 1);
+        assert_eq!(solution.routes[0].path, vec![0, 0]);
+        assert_eq!(solution.total_cost, 0.0);
+        assert!(state.visited_nodes.contains(&0));
+        assert_eq!(state.cluster_locks.get(&0), Some(&0));
+        assert_eq!(state.subgroup_nodes_count.get(&0), Some(&1));
+    }
+
+    #[test]
+    fn test_build_greedy_solution() {
+        let instance = create_test_instance();
+        let (solution, state) = build_greedy_solution(&instance).unwrap();
+
+        // Subgroup 1 has highest profit/cost ratio (50 / 6 = 8.33), so it should be inserted first
+        assert!(solution.total_score >= 50.0);
+        assert!(solution.total_cost <= 30.0);
+        assert!(state.visited_nodes.contains(&1));
+    }
+}

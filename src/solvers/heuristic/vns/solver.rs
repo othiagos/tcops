@@ -78,3 +78,56 @@ pub fn solve<'a>(
 
     Ok(best_solution)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::common::instance::{Cluster, Metric, Node, Point3, Subgroup, Vehicle};
+    use crate::common::solution::SolutionStatus;
+
+    fn create_test_instance() -> Instance {
+        Instance {
+            name: "vns_solver_test".to_string(),
+            metric: Metric::Euc2d,
+            nodes: vec![
+                Node { id: 0, point: Point3 { x: 0.0, y: 0.0, z: 0.0 }, ..Default::default() },
+                Node { id: 1, point: Point3 { x: 0.0, y: 3.0, z: 0.0 }, ..Default::default() },
+                Node { id: 2, point: Point3 { x: 4.0, y: 0.0, z: 0.0 }, ..Default::default() },
+            ],
+            subgroups: vec![
+                Subgroup { id: 0, profit: 10.0, node_ids: vec![1], parent_cluster_id: 0 },
+                Subgroup { id: 1, profit: 20.0, node_ids: vec![2], parent_cluster_id: 1 },
+            ],
+            clusters: vec![
+                Cluster { id: 0, subgroup_ids: vec![0] },
+                Cluster { id: 1, subgroup_ids: vec![1] },
+            ],
+            vehicles: vec![
+                Vehicle { id: 0, budget: 50.0, start_node_id: 0, end_node_id: 0 },
+                Vehicle { id: 1, budget: 50.0, start_node_id: 0, end_node_id: 0 },
+            ],
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn test_vns_solve_basic() {
+        let instance = create_test_instance();
+        let solution = solve(&instance, 5, 2).expect("VNS solve should succeed");
+
+        assert_eq!(solution.status, SolutionStatus::Feasible);
+        assert_eq!(solution.total_score, 30.0);
+        assert_eq!(solution.routes.len(), 2);
+        assert!(solution.total_cost > 0.0);
+    }
+
+    #[test]
+    fn test_vns_solve_cleans_empty_routes() {
+        let instance = create_test_instance();
+        let solution = solve(&instance, 2, 1).expect("VNS solve should succeed");
+
+        let route = solution.routes.iter().find(|r| r.vehicle_id == 1).unwrap();
+        assert_eq!(route.cost, 0.0);
+        assert_eq!(route.path.len(), 1);
+    }
+}
