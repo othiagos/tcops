@@ -445,7 +445,7 @@ mod tests {
             time_limit: None,
             folder_result: folder_result.clone(),
             custom_result_name: Some("custom_res".to_string()),
-            gurobi_params: None,
+            gurobi_params_file: None,
         };
 
         let output_path = export_solution_to_json(&sol, &cli);

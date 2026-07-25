@@ -65,7 +65,7 @@ impl<'a> Ilp<'a> {
             self.model.set_param(param::TimeLimit, limit as f64)?;
         }
 
-        if let Some(file) = &args.gurobi_params {
+        if let Some(file) = &args.gurobi_params_file {
             self.model.get_env_mut().read_params(file)?;
         } 
 
