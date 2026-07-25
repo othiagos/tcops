@@ -125,3 +125,56 @@ impl HasId for Vehicle {
         self.id
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_metric_display_and_default() {
+        assert_eq!(Metric::default().to_string(), "Euc3d");
+        assert_eq!(Metric::Euc2d.to_string(), "Euc2d");
+        assert_eq!(Metric::Euc3d.to_string(), "Euc3d");
+        assert_eq!(Metric::Man2d.to_string(), "Man2d");
+        assert_eq!(Metric::Man3d.to_string(), "Man3d");
+    }
+
+    #[test]
+    fn test_point3_distances() {
+        let p1 = Point3 { x: 0.0, y: 0.0, z: 0.0 };
+        let p2 = Point3 { x: 3.0, y: 4.0, z: 12.0 };
+
+        assert_eq!(p1.distance_to(&p2, &Metric::Euc2d), 5.0);
+        assert_eq!(p1.distance_to(&p2, &Metric::Euc3d), 13.0);
+        assert_eq!(p1.distance_to(&p2, &Metric::Man2d), 7.0);
+        assert_eq!(p1.distance_to(&p2, &Metric::Man3d), 19.0);
+    }
+
+    #[test]
+    fn test_instance_get_distance() {
+        let instance = Instance {
+            metric: Metric::Euc2d,
+            nodes: vec![
+                Node { id: 0, point: Point3 { x: 0.0, y: 0.0, z: 0.0 }, ..Default::default() },
+                Node { id: 1, point: Point3 { x: 6.0, y: 8.0, z: 0.0 }, ..Default::default() },
+            ],
+            ..Default::default()
+        };
+
+        assert_eq!(instance.get_distance(0, 1), 10.0);
+    }
+
+    #[test]
+    fn test_has_id_implementations() {
+        let node = Node { id: 42, ..Default::default() };
+        let subgroup = Subgroup { id: 10, ..Default::default() };
+        let cluster = Cluster { id: 5, ..Default::default() };
+        let vehicle = Vehicle { id: 3, ..Default::default() };
+
+        assert_eq!(node.id(), 42);
+        assert_eq!(subgroup.id(), 10);
+        assert_eq!(cluster.id(), 5);
+        assert_eq!(vehicle.id(), 3);
+    }
+}
+

@@ -71,3 +71,46 @@ impl<'a> Solution<'a> {
         self.total_score
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_solution_status_display() {
+        assert_eq!(SolutionStatus::Optimal.to_string(), "Optimal");
+        assert_eq!(SolutionStatus::Feasible.to_string(), "Feasible");
+        assert_eq!(SolutionStatus::TimeLimit.to_string(), "Time Limit");
+        assert_eq!(SolutionStatus::IterationLimit.to_string(), "Iteration Limit");
+        assert_eq!(SolutionStatus::Unknown.to_string(), "Unknown");
+        assert_eq!(SolutionStatus::default(), SolutionStatus::Unknown);
+    }
+
+    #[test]
+    fn test_solution_status_from_grb_status() {
+        assert_eq!(SolutionStatus::from(Status::Optimal), SolutionStatus::Optimal);
+        assert_eq!(SolutionStatus::from(Status::TimeLimit), SolutionStatus::TimeLimit);
+        assert_eq!(SolutionStatus::from(Status::IterationLimit), SolutionStatus::IterationLimit);
+        assert_eq!(SolutionStatus::from(Status::Infeasible), SolutionStatus::Unknown);
+    }
+
+    #[test]
+    fn test_solution_get_objective_value() {
+        let instance = Instance::default();
+        let solution = Solution {
+            instance: &instance,
+            duration: Duration::from_secs(1),
+            routes: vec![],
+            total_cost: 15.5,
+            total_score: 100.0,
+            status: SolutionStatus::Optimal,
+            solver: Some("exact".to_string()),
+            best_bound: Some(100.0),
+            gap: Some(0.0),
+            explored_nodes: Some(10),
+        };
+
+        assert_eq!(solution.get_objective_value(), 100.0);
+    }
+}
+
