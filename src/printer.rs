@@ -44,3 +44,27 @@ fn format_path(path: &[usize]) -> String {
 
     format!("[{}, ..., {}]", first.join(", "), last.join(", "))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_format_path_short() {
+        let path = vec![0, 1, 2, 0];
+        assert_eq!(format_path(&path), "[0, 1, 2, 0]");
+
+        let path7 = vec![0, 1, 2, 3, 4, 5, 6];
+        assert_eq!(format_path(&path7), "[0, 1, 2, 3, 4, 5, 6]");
+    }
+
+    #[test]
+    fn test_format_path_long() {
+        let path8 = vec![0, 1, 2, 3, 4, 5, 6, 7];
+        assert_eq!(format_path(&path8), "[0, 1, 2, ..., 5, 6, 7]");
+
+        let path10 = vec![0, 10, 20, 30, 40, 50, 60, 70, 80, 90];
+        assert_eq!(format_path(&path10), "[0, 10, 20, ..., 70, 80, 90]");
+    }
+}
+
