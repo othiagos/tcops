@@ -71,3 +71,52 @@ pub fn initialize_w(model: &mut Model, instance: &Instance) -> grb::Result<Vec<V
 
     Ok(w)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::common::instance::{Cluster, Node, Subgroup, Vehicle};
+
+    fn create_test_instance() -> Instance {
+        Instance {
+            nodes: vec![
+                Node { id: 0, ..Default::default() },
+                Node { id: 1, ..Default::default() },
+            ],
+            subgroups: vec![
+                Subgroup { id: 0, profit: 10.0, node_ids: vec![1], ..Default::default() },
+            ],
+            clusters: vec![
+                Cluster { id: 0, subgroup_ids: vec![0] },
+            ],
+            vehicles: vec![
+                Vehicle { id: 0, budget: 10.0, start_node_id: 0, end_node_id: 0 },
+            ],
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn test_variable_initialization() -> grb::Result<()> {
+        let env = Env::new("gurobi.log")?;
+        let mut model = Model::with_env("var_test", &env)?;
+        let instance = create_test_instance();
+
+        let x = initialize_x(&mut model, &instance)?;
+        let y = initialize_y(&mut model, &instance)?;
+        let z = initialize_z(&mut model, &instance)?;
+        let w = initialize_w(&mut model, &instance)?;
+
+        assert_eq!(x.len(), 1); // 1 vehicle
+        assert_eq!(x[0].len(), 2); // 2 nodes
+        assert_eq!(x[0][0].len(), 2);
+
+        assert_eq!(y.len(), 1);
+        assert_eq!(y[0].len(), 2);
+
+        assert_eq!(z.len(), 1);
+        assert_eq!(w.len(), 1);
+
+        Ok(())
+    }
+}

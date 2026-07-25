@@ -15,6 +15,7 @@ impl fmt::Display for SolverErrorKind {
 }
 
 #[allow(dead_code)]
+#[derive(Debug)]
 pub struct SolverError {
     pub kind: SolverErrorKind,
     pub message: String,

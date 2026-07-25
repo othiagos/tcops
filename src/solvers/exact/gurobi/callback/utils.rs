@@ -50,3 +50,55 @@ pub fn filter_orthogonal_cuts(mut all_cuts: Vec<CutTuple>) -> Vec<CutTuple> {
 
     w_cuts
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_jaccard_similarity_empty() {
+        assert_eq!(jaccard_similarity(&[], &[]), 0.0);
+    }
+
+    #[test]
+    fn test_jaccard_similarity_identical() {
+        let s1 = vec![1, 2, 3];
+        let s2 = vec![1, 2, 3];
+        assert_eq!(jaccard_similarity(&s1, &s2), 1.0);
+    }
+
+    #[test]
+    fn test_jaccard_similarity_disjoint() {
+        let s1 = vec![1, 2];
+        let s2 = vec![3, 4];
+        assert_eq!(jaccard_similarity(&s1, &s2), 0.0);
+    }
+
+    #[test]
+    fn test_jaccard_similarity_partial() {
+        let s1 = vec![1, 2, 3];
+        let s2 = vec![2, 3, 4];
+        // intersection = 2 ({2,3}), union = 4 ({1,2,3,4}), similarity = 2/4 = 0.5
+        assert_eq!(jaccard_similarity(&s1, &s2), 0.5);
+    }
+
+    #[test]
+    fn test_filter_orthogonal_cuts_empty() {
+        let cuts = filter_orthogonal_cuts(vec![]);
+        assert!(cuts.is_empty());
+    }
+
+    #[test]
+    fn test_filter_orthogonal_cuts_sorting_and_filtering() {
+        // CutTuple: (vehicle_id, tour, violation, src)
+        let cut1: CutTuple = (0, vec![1, 2], 0.8, 1);
+        let cut2: CutTuple = (0, vec![1, 2], 0.9, 1); // Identical tour, higher violation -> should be kept, cut1 dropped
+        let cut3: CutTuple = (0, vec![5, 6], 0.7, 5); // Disjoint tour -> should be kept
+
+        let cuts = filter_orthogonal_cuts(vec![cut1, cut2, cut3]);
+
+        assert_eq!(cuts.len(), 2);
+        assert_eq!(cuts[0].2, 0.9); // Highest violation first
+        assert_eq!(cuts[1].2, 0.7);
+    }
+}

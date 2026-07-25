@@ -123,3 +123,62 @@ fn get_route_node(
 
     Ok(current_route_nodes)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::common::instance::{Cluster, Metric, Node, Point3, Subgroup, Vehicle};
+    use crate::solvers::exact::gurobi::variable;
+
+    fn create_test_instance() -> Instance {
+        Instance {
+            name: "parser_test".to_string(),
+            metric: Metric::Euc2d,
+            nodes: vec![
+                Node { id: 0, point: Point3 { x: 0.0, y: 0.0, z: 0.0 }, ..Default::default() },
+                Node { id: 1, point: Point3 { x: 0.0, y: 3.0, z: 0.0 }, ..Default::default() },
+            ],
+            subgroups: vec![
+                Subgroup { id: 0, profit: 10.0, node_ids: vec![1], parent_cluster_id: 0 },
+            ],
+            clusters: vec![
+                Cluster { id: 0, subgroup_ids: vec![0] },
+            ],
+            vehicles: vec![
+                Vehicle { id: 0, budget: 20.0, start_node_id: 0, end_node_id: 0 },
+            ],
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn test_parse_solution_after_optimization() -> grb::Result<()> {
+        let instance = create_test_instance();
+        let env = Env::new("gurobi.log")?;
+        let mut model = Model::with_env("parser_test", &env)?;
+
+        let x = variable::initialize_x(&mut model, &instance)?;
+        let y = variable::initialize_y(&mut model, &instance)?;
+        let z = variable::initialize_z(&mut model, &instance)?;
+        let w = variable::initialize_w(&mut model, &instance)?;
+
+        let vars = DecisionVariables { x, y, z, w };
+        
+        // Solve model (empty constraints -> 0 objective)
+        model.optimize()?;
+        let status = model.status()?;
+
+        let metrics = SolverMetrics {
+            best_bound: Some(0.0),
+            gap: Some(0.0),
+            explored_nodes: Some(0),
+        };
+
+        let solution = parse_solution(&model, &vars, &instance, Duration::from_secs(1), metrics, status)?;
+
+        assert_eq!(solution.solver, Some("Gurobi".to_string()));
+        assert_eq!(solution.instance.name, "parser_test");
+
+        Ok(())
+    }
+}

@@ -77,7 +77,7 @@ pub fn find_fractional_subtours(
         }
 
         if !reaches_sink {
-            let violation = y_val; // A violação é total (o fluxo é 0)
+            let violation = y_val;
             let mut component: Vec<usize> = (0..num_active)
                 .filter(|&i| !visited[i])
                 .map(|i| new_to_old[i])
@@ -142,4 +142,40 @@ pub fn find_invalid_subtours(
         }
     }
     bad_tours
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_find_invalid_subtours_connected_to_depot() {
+        // Active edges forming route 0 -> 1 -> 2 -> 0 (depot is 0)
+        let active_edges = vec![(0, 1), (1, 2), (2, 0)];
+        let bad_tours = find_invalid_subtours(3, 0, 0, &active_edges);
+        // Valid main tour connected to depot 0 -> no invalid subtours
+        assert!(bad_tours.is_empty());
+    }
+
+    #[test]
+    fn test_find_invalid_subtours_disconnected_subtour() {
+        // Route 0 -> 1 -> 0 (depot 0), PLUS disconnected subtour 2 -> 3 -> 2
+        let active_edges = vec![(0, 1), (1, 0), (2, 3), (3, 2)];
+        let bad_tours = find_invalid_subtours(4, 0, 0, &active_edges);
+        assert_eq!(bad_tours.len(), 1);
+        let mut tour = bad_tours[0].clone();
+        tour.sort_unstable();
+        assert_eq!(tour, vec![2, 3]);
+    }
+
+    #[test]
+    fn test_find_fractional_subtours_unreachable_sink() {
+        // Node 0 (depot), Node 1 (y=1.0) with zero capacity edge (0, 1)
+        let edges = vec![(0, 1, 0.0)];
+        let y_vals = vec![0.0, 1.0];
+        let bad_tours = find_fractional_subtours(2, 0, &edges, &y_vals);
+        // Sink 1 is unreachable from 0 -> returns fractional cut for sink node 1
+        assert_eq!(bad_tours.len(), 1);
+        assert_eq!(bad_tours[0].2, 1);
+    }
 }

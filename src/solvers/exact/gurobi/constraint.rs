@@ -175,3 +175,64 @@ pub fn budget(
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashSet;
+    use crate::common::instance::{Cluster, Node, Subgroup, Vehicle};
+    use crate::solvers::exact::gurobi::variable;
+
+    fn create_test_instance() -> Instance {
+        Instance {
+            nodes: vec![
+                Node {
+                    id: 0,
+                    parent_subgroup_ids: HashSet::from([0]),
+                    ..Default::default()
+                },
+                Node {
+                    id: 1,
+                    parent_subgroup_ids: HashSet::from([0]),
+                    ..Default::default()
+                },
+            ],
+            subgroups: vec![
+                Subgroup { id: 0, profit: 10.0, node_ids: vec![0, 1], parent_cluster_id: 0 },
+            ],
+            clusters: vec![
+                Cluster { id: 0, subgroup_ids: vec![0] },
+            ],
+            vehicles: vec![
+                Vehicle { id: 0, budget: 50.0, start_node_id: 0, end_node_id: 0 },
+            ],
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn test_all_constraints_building() -> grb::Result<()> {
+        let env = Env::new("gurobi.log")?;
+        let mut model = Model::with_env("constr_test", &env)?;
+        let instance = create_test_instance();
+
+        let x = variable::initialize_x(&mut model, &instance)?;
+        let y = variable::initialize_y(&mut model, &instance)?;
+        let z = variable::initialize_z(&mut model, &instance)?;
+        let w = variable::initialize_w(&mut model, &instance)?;
+
+        let vars = DecisionVariables { x, y, z, w };
+
+        flow_conservation(&mut model, &vars, &instance)?;
+        logical_visit(&mut model, &vars, &instance)?;
+        unique_visit(&mut model, &vars, &instance)?;
+        logical_physical(&mut model, &vars, &instance)?;
+        cluster(&mut model, &vars, &instance)?;
+        budget(&mut model, &vars, &instance)?;
+
+        model.update()?;
+        assert!(model.get_attr(attr::NumConstrs)? > 0);
+
+        Ok(())
+    }
+}

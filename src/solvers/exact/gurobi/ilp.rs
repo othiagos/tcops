@@ -132,3 +132,61 @@ impl<'a> Ilp<'a> {
         ))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashSet;
+    use std::path::PathBuf;
+    use crate::cli::SolverMode;
+    use crate::common::instance::{Cluster, Metric, Node, Point3, Subgroup, Vehicle};
+
+    fn create_test_instance() -> Instance {
+        Instance {
+            name: "ilp_test".to_string(),
+            metric: Metric::Euc2d,
+            nodes: vec![
+                Node { id: 0, point: Point3 { x: 0.0, y: 0.0, z: 0.0 }, parent_subgroup_ids: HashSet::new() },
+                Node { id: 1, point: Point3 { x: 0.0, y: 3.0, z: 0.0 }, parent_subgroup_ids: HashSet::from([0]) },
+            ],
+            subgroups: vec![
+                Subgroup { id: 0, profit: 10.0, node_ids: vec![1], parent_cluster_id: 0 },
+            ],
+            clusters: vec![
+                Cluster { id: 0, subgroup_ids: vec![0] },
+            ],
+            vehicles: vec![
+                Vehicle { id: 0, budget: 20.0, start_node_id: 0, end_node_id: 0 },
+            ],
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn test_ilp_creation_and_solving() -> grb::Result<()> {
+        let instance = create_test_instance();
+        let ilp = Ilp::new(&instance)?;
+
+        let cli = Cli {
+            input: PathBuf::from("dummy.tcops"),
+            mode: SolverMode::Exact,
+            library: None,
+            max_iterations: 10,
+            max_shaking_intensity: 5,
+            show: false,
+            save: false,
+            time_limit: Some(5),
+            folder_result: "./result".to_string(),
+            custom_result_name: None,
+            gurobi_params_file: None,
+            #[cfg(feature = "lib_good_lp")]
+            solver: None,
+        };
+
+        let solution = ilp.solve(&cli).expect("ILP solve should succeed");
+        assert_eq!(solution.total_score, 10.0);
+        assert_eq!(solution.routes[0].path, vec![0, 1, 0]);
+
+        Ok(())
+    }
+}
