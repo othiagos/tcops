@@ -2,13 +2,12 @@ use crate::common::instance::{Node, Subgroup};
 use crate::parser::sections::common::handle_section;
 use crate::parser::utils::{LineTracker, parse_integer, parse_float};
 use crate::parser::validator::validate_item_id;
-use std::fs::File;
-use std::io::{BufReader, Error, ErrorKind};
+use std::io::{BufRead, Error, ErrorKind};
 
 const SUBGROUP_DATA_MIN_PARTS: usize = 2;
 
-pub fn process(
-    tracker: &mut LineTracker<BufReader<File>>,
+pub fn process<R: BufRead>(
+    tracker: &mut LineTracker<R>,
     subgroups: &mut Vec<Subgroup>,
     nodes: &[Node],
 ) -> Result<(), Error> {
@@ -42,3 +41,56 @@ fn parse(parts: Vec<&str>, nodes: &[Node]) -> Result<Subgroup, Error> {
         parent_cluster_id: 0,
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Cursor;
+
+    #[test]
+    fn test_parse_subgroup_success() {
+        let nodes = vec![
+            Node { id: 0, ..Default::default() },
+            Node { id: 1, ..Default::default() },
+        ];
+
+        let sg = parse(vec!["0", "100.5", "0", "1"], &nodes).unwrap();
+        assert_eq!(sg.id, 0);
+        assert_eq!(sg.profit, 100.5);
+        assert_eq!(sg.node_ids, vec![0, 1]);
+    }
+
+    #[test]
+    fn test_parse_subgroup_invalid_node_ref() {
+        let nodes = vec![Node { id: 0, ..Default::default() }];
+
+        let err = parse(vec!["0", "100.5", "0", "5"], &nodes);
+        assert!(err.is_err());
+        assert!(err.unwrap_err().to_string().contains("Integrity error: Node ID 5 does not exist."));
+    }
+
+    #[test]
+    fn test_parse_subgroup_insufficient_parts() {
+        let nodes = vec![];
+        let err = parse(vec!["0"], &nodes);
+        assert!(err.is_err());
+        assert!(err.unwrap_err().to_string().contains("Invalid subgroup data"));
+    }
+
+    #[test]
+    fn test_process_subgroups() {
+        let nodes = vec![
+            Node { id: 0, ..Default::default() },
+            Node { id: 1, ..Default::default() },
+        ];
+        let input = "0 50.0 0 1\n";
+        let mut tracker = LineTracker::new(Cursor::new(input));
+        let mut subgroups = Vec::with_capacity(1);
+
+        assert!(process(&mut tracker, &mut subgroups, &nodes).is_ok());
+        assert_eq!(subgroups.len(), 1);
+        assert_eq!(subgroups[0].id, 0);
+        assert_eq!(subgroups[0].node_ids, vec![0, 1]);
+    }
+}
+

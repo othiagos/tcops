@@ -1,8 +1,9 @@
 use std::io::{BufRead, Error, ErrorKind};
 
 pub fn get_split_line_parts(line: &str) -> Vec<&str> {
-    line.trim().split(":").collect()
+    line.trim().splitn(2, ':').collect()
 }
+
 
 pub fn parse_integer(value: &str) -> Result<usize, Error> {
     value.parse::<usize>().map_err(|e| {
@@ -61,3 +62,71 @@ impl<T: BufRead> LineTracker<T> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Cursor;
+
+    #[test]
+    fn test_get_split_line_parts() {
+        assert_eq!(get_split_line_parts("NAME: burma14"), vec!["NAME", " burma14"]);
+        assert_eq!(get_split_line_parts("  KEY : VAL  "), vec!["KEY ", " VAL"]);
+        assert_eq!(get_split_line_parts("NO_COLON"), vec!["NO_COLON"]);
+        assert_eq!(get_split_line_parts("A:B:C"), vec!["A", "B:C"]);
+    }
+
+
+    #[test]
+    fn test_parse_integer() {
+        assert_eq!(parse_integer("123").unwrap(), 123);
+        assert_eq!(parse_integer("0").unwrap(), 0);
+        assert!(parse_integer("-5").is_err());
+        assert!(parse_integer("12.34").is_err());
+        assert!(parse_integer("abc").is_err());
+    }
+
+    #[test]
+    fn test_parse_float() {
+        assert_eq!(parse_float("12.34").unwrap(), 12.34);
+        assert_eq!(parse_float("-5.67").unwrap(), -5.67);
+        assert_eq!(parse_float("10").unwrap(), 10.0);
+        assert!(parse_float("abc").is_err());
+    }
+
+    #[test]
+    fn test_is_empty_or_comment() {
+        assert!(is_empty_or_comment(""));
+        assert!(is_empty_or_comment("   \t\n"));
+        assert!(is_empty_or_comment("# comment"));
+        assert!(is_empty_or_comment("   # comment with leading spaces"));
+        assert!(!is_empty_or_comment("NAME: test"));
+    }
+
+    #[test]
+    fn test_line_tracker() {
+        let input = "
+# Comment line 1
+NAME: test
+
+# Comment line 2
+DIMENSION: 10
+";
+        let cursor = Cursor::new(input);
+        let mut tracker = LineTracker::new(cursor);
+
+        assert_eq!(tracker.current_line(), 0);
+
+        let line1 = tracker.read_next_valid_line().unwrap();
+        assert_eq!(line1.trim(), "NAME: test");
+        assert_eq!(tracker.current_line(), 3);
+
+        let line2 = tracker.read_next_valid_line().unwrap();
+        assert_eq!(line2.trim(), "DIMENSION: 10");
+        assert_eq!(tracker.current_line(), 6);
+
+        let eof = tracker.read_next_valid_line().unwrap();
+        assert!(eof.is_empty());
+    }
+}
+

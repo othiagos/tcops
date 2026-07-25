@@ -23,3 +23,44 @@ fn link_clusters_references(instance: &mut Instance) {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::common::instance::{Cluster, Node, Subgroup};
+
+    #[test]
+    fn test_link_parent_references() {
+        let mut instance = Instance {
+            nodes: vec![
+                Node { id: 0, ..Default::default() },
+                Node { id: 1, ..Default::default() },
+                Node { id: 2, ..Default::default() },
+            ],
+            subgroups: vec![
+                Subgroup { id: 0, node_ids: vec![0, 1], ..Default::default() },
+                Subgroup { id: 1, node_ids: vec![1, 2], ..Default::default() },
+            ],
+            clusters: vec![
+                Cluster { id: 0, subgroup_ids: vec![0, 1] },
+            ],
+            ..Default::default()
+        };
+
+        link_parent_references(&mut instance);
+
+        // Verify node -> subgroup parent links
+        assert!(instance.nodes[0].parent_subgroup_ids.contains(&0));
+        assert!(!instance.nodes[0].parent_subgroup_ids.contains(&1));
+
+        assert!(instance.nodes[1].parent_subgroup_ids.contains(&0));
+        assert!(instance.nodes[1].parent_subgroup_ids.contains(&1));
+
+        assert!(!instance.nodes[2].parent_subgroup_ids.contains(&0));
+        assert!(instance.nodes[2].parent_subgroup_ids.contains(&1));
+
+        // Verify subgroup -> cluster parent links
+        assert_eq!(instance.subgroups[0].parent_cluster_id, 0);
+        assert_eq!(instance.subgroups[1].parent_cluster_id, 0);
+    }
+}
